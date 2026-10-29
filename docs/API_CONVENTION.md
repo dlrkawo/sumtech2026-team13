@@ -137,7 +137,7 @@
 | 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
 | 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
 | 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 구현 |
-| 할 일 목록 | POST | `/api/guide-plans` | `GuidePlanRequest` `{ image, question }` | `GuidePlanResponse` `{ steps, status, hint }` | 필요 | hyuckkim | - (시나리오 없이 기능만) | 명세 |
+| 할 일 목록 | POST | `/api/guide-plans` | `GuidePlanRequest` `{ image, question }` | `GuidePlanResponse` `{ steps, status, hint }` | 필요 | hyuckkim | - (시나리오 없이 기능만) | 구현 |
 | 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` (최신순, 최대 50개) | 필요 | 이감재 | S7 | 구현 |
 | 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 개인정보 보호 | 구현 |
 
