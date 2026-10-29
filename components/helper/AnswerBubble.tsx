@@ -31,6 +31,7 @@ export interface AnswerBubbleProps {
   onNext: () => void;
   onRetry: () => void;
   onClose: () => void;
+  hasPhoto: boolean;
   onPickPhoto: (file: File) => void;
 }
 
@@ -46,6 +47,7 @@ export function AnswerBubble({
   onNext,
   onRetry,
   onClose,
+  hasPhoto,
   onPickPhoto,
 }: AnswerBubbleProps) {
   const isRisk = !isLoading && guide?.risk != null;
@@ -63,7 +65,7 @@ export function AnswerBubble({
           {title}
         </p>
         <label
-          className={`flex h-[56px] w-[56px] shrink-0 cursor-pointer items-center justify-center rounded-[28px] border-2 border-[#C9C6BE] bg-white hover:bg-[#F0EFEB] focus-within:outline-[4px] focus-within:outline-offset-[3px] focus-within:outline-[#E8A200]`}
+          className={`flex min-h-[56px] shrink-0 cursor-pointer items-center gap-[6px] rounded-[28px] border-2 border-[#C9C6BE] bg-white px-[14px] text-[20px] font-bold hover:bg-[#F0EFEB] focus-within:outline-[4px] focus-within:outline-offset-[3px] focus-within:outline-[#E8A200]`}
         >
           <svg
             width="24"
@@ -78,6 +80,7 @@ export function AnswerBubble({
             <circle cx="9" cy="11" r="2" />
             <path d="M21 16l-5-5-8 8" />
           </svg>
+          <span>{hasPhoto ? "사진 바꾸기" : "사진 올리기"}</span>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
