@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>목소리 인식 비교</title>
+    <style>
+      body { font-family: sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; line-height: 1.5; }
+      button { font-size: 18px; padding: 10px 18px; }
+      #record.on { background: #c62828; color: #fff; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+      .box { border: 2px solid #ccc; border-radius: 8px; padding: 12px; min-height: 120px; }
+      .box h2 { margin: 0 0 8px; font-size: 18px; }
+      .text { font-size: 20px; font-weight: bold; white-space: pre-wrap; }
+      .meta { color: #555; font-size: 14px; }
+      .err { color: #c62828; }
+      table { border-collapse: collapse; width: 100%; margin-top: 16px; font-size: 14px; }
+      th, td { border: 1px solid #ccc; padding: 6px; text-align: left; vertical-align: top; }
+    </style>
+  </head>
+  <body>
+    <h1>목소리 인식 비교</h1>
+    <p>
+      버튼을 누르고 말한 뒤 다시 누르면, 같은 말을 두 방식으로 받아 비교합니다.<br />
+      A: 브라우저 음성 인식(지금 FE의 useSpeechInput과 같은 방식, ko-KR) · B: 녹음 → AI Gateway 음성 인식(/api/voice-guides와 같은 방식)
+    </p>
+    <p>
+      모델 <select id="model"></select>
+      <span id="keyState" class="meta"></span>
+    </p>
+    <p>
+      <label>말할 문장(정답, 선택): <input id="expected" size="40" placeholder="예: 친구에게 만원 보내고 싶어" /></label>
+    </p>
+    <button id="record">● 녹음 시작</button>
+    <span id="state" class="meta">대기 중</span>
+
+    <div class="row">
+      <div class="box">
+        <h2>A. 브라우저 음성 인식</h2>
+        <div id="aText" class="text"></div>
+        <div id="aMeta" class="meta"></div>
+      </div>
+      <div class="box">
+        <h2>B. AI Gateway 음성 인식</h2>
+        <div id="bText" class="text"></div>
+        <div id="bMeta" class="meta"></div>
+        <audio id="playback" controls></audio>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>정답</th><th>A (브라우저)</th><th>A 대기</th><th>B (모델)</th><th>B 대기</th><th>녹음</th></tr>
+      </thead>
+      <tbody id="log"></tbody>
+    </table>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      let recorder = null;
+      let recognition = null;
+      let chunks = [];
+      let aFinal = '';
+      let aDone = null; // A 결과가 끝난 시각
+      let stoppedAt = 0;
+      let trial = 0;
+
+      fetch('/config').then((r) => r.json()).then(({ models, hasKey }) => {
+        $('model').innerHTML = models.map((m) => `<option>${m}</option>`).join('');
+        $('keyState').textContent = hasKey ? '키 있음' : '⚠ 저장소 루트 .env에 AI_GATEWAY_API_KEY가 없어서 B는 실패합니다';
+      });
+
+      const blobToDataUrl = (blob) =>
+        new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+
+      // A: 브라우저 음성 인식. 말을 멈춘 뒤 최종 결과가 나오기까지 걸린 시간을 잰다
+      function startRecognition() {
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        aFinal = '';
+        aDone = null;
+        if (!Recognition) {
+          $('aText').innerHTML = '<span class="err">이 브라우저는 음성 인식을 지원하지 않아요</span>';
+          return null;
+        }
+        const rec = new Recognition();
+        rec.lang = 'ko-KR';
+        rec.continuous = true;
+        rec.interimResults = true;
+        rec.onresult = (e) => {
+          let interim = '';
+          aFinal = '';
+          for (const r of e.results) (r.isFinal ? (aFinal += r[0].transcript) : (interim += r[0].transcript));
+          $('aText').textContent = aFinal + (interim ? ` ${interim}…` : '');
+        };
+        rec.onerror = (e) => ($('aMeta').innerHTML = `<span class="err">오류: ${e.error}</span>`);
+        rec.onend = () => {
+          aDone = Date.now();
+          $('aText').textContent = aFinal;
+          $('aMeta').textContent = `멈춘 뒤 ${stoppedAt ? aDone - stoppedAt : '?'}ms`;
+        };
+        rec.start();
+        return rec;
+      }
+
+      async function start() {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        chunks = [];
+        recorder = new MediaRecorder(stream);
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.start();
+        recognition = startRecognition();
+        ['aText', 'aMeta', 'bText', 'bMeta'].forEach((id) => ($(id).textContent = ''));
+        $('record').textContent = '■ 녹음 멈춤';
+        $('record').classList.add('on');
+        $('state').textContent = '듣는 중… 말씀하세요';
+      }
+
+      async function stop() {
+        stoppedAt = Date.now();
+        $('record').textContent = '● 녹음 시작';
+        $('record').classList.remove('on');
+        $('state').textContent = '결과 기다리는 중…';
+        recognition?.stop();
+
+        const blob = await new Promise((resolve) => {
+          recorder.onstop = () => resolve(new Blob(chunks, { type: recorder.mimeType }));
+          recorder.stop();
+        });
+        recorder.stream.getTracks().forEach((t) => t.stop());
+        $('playback').src = URL.createObjectURL(blob);
+
+        const audio = await blobToDataUrl(blob);
+        const model = $('model').value;
+        const sentAt = Date.now();
+        const b = await fetch('/transcribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audio, model }),
+        }).then((r) => r.json());
+        const bWait = Date.now() - stoppedAt;
+
+        if (b.ok) {
+          $('bText').textContent = b.text;
+          $('bMeta').textContent = `멈춘 뒤 ${bWait}ms (Gateway ${b.elapsedMs}ms) · 언어 ${b.language} · 길이 ${b.durationInSeconds}s · ${b.mediaType}`;
+        } else {
+          $('bText').innerHTML = `<span class="err">실패 (HTTP ${b.status})</span>`;
+          $('bMeta').textContent = b.error;
+        }
+
+        // A가 아직 안 끝났으면 잠깐 기다린다
+        for (let i = 0; i < 30 && recognition && aDone === null; i++) await new Promise((r) => setTimeout(r, 100));
+        const aWait = aDone ? aDone - stoppedAt : null;
+
+        const entry = {
+          expected: $('expected').value || null,
+          browser: { text: aFinal, waitMs: aWait },
+          gateway: { model, ok: b.ok, status: b.status, text: b.ok ? b.text : null, error: b.ok ? null : b.error, waitMs: bWait, gatewayMs: b.elapsedMs ?? null, language: b.language ?? null, durationInSeconds: b.durationInSeconds ?? null },
+          recording: { mimeType: blob.type, bytes: blob.size, dataUrlLength: audio.length },
+          userAgent: navigator.userAgent,
+        };
+        await fetch('/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(entry) });
+
+        trial += 1;
+        const tr = document.createElement('tr');
+        const cells = [trial, entry.expected ?? '', aFinal, aWait === null ? '-' : `${aWait}ms`, b.ok ? `${b.text} (${model})` : `실패 ${b.status}`, `${bWait}ms`, `${blob.type} ${(blob.size / 1024).toFixed(0)}KB`];
+        cells.forEach((c) => {
+          const td = document.createElement('td');
+          td.textContent = c;
+          tr.appendChild(td);
+        });
+        $('log').prepend(tr);
+        $('state').textContent = '기록했어요 (trash/voice-compare/results.jsonl)';
+      }
+
+      $('record').addEventListener('click', () => {
+        if (recorder && recorder.state === 'recording') stop();
+        else start().catch((e) => ($('state').textContent = `마이크를 열 수 없어요: ${e.message}`));
+      });
+    </script>
+  </body>
+</html>
