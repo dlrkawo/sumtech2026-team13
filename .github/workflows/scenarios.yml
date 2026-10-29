@@ -11,6 +11,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# main에 연달아 push하면 이전 실행은 취소하고 최신 commit만 검사한다 (실행이 쌓여 오래 걸리는 것 방지)
+concurrency:
+  group: scenarios-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scenarios:
     runs-on: ubuntu-latest
