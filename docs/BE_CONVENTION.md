@@ -20,7 +20,8 @@
 - 앱은 컨테이너 안 3000 포트에서 받음. 코드에 `localhost:3000` 같은 절대 주소 금지 (API 호출은 `/api/...` 상대 경로)
 - 빌드는 Dockerfile에서 끝내고, 시작 명령은 서버 실행만
 - 빈 DB에서 `docker compose up --build` 하나로 앱과 시드 데이터가 2분 안에 떠야 함
-  - 마이그레이션·시드는 **컨테이너 시작 명령에서 서버 실행 직전에** 실행(키트 허용: "서버 실행(필요하면 마이그레이션·시드 포함)"). 이미 있으면 건너뛰게 작성
+  - 마이그레이션·시드는 **서버가 시작될 때 `instrumentation.ts` → `server/db/init.ts`에서 자동 실행**(이미 적용된 것은 건너뜀). 시작 명령은 `node server.js` 그대로
+  - DB 준비가 실패해도 서버는 뜬다(`/__health`는 DB와 무관하게 200, DB가 필요한 API만 503 `DB_UNAVAILABLE`)
 - `GET /__health`는 인증·리다이렉트 없이 200, 실제 배포 commit을 releaseId로 응답 (docker 앱·배포 둘 다)
   - 파일 위치: `app/%5F%5Fhealth/route.ts` (Next.js는 `_`로 시작하는 폴더를 라우트로 쓰지 않기 때문)
 - 환경변수 이름은 키트 그대로: `RELEASE_ID`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `AI_GATEWAY_API_KEY`, DB 주소는 `DATABASE_URL`(키트 compose 템플릿)
@@ -40,7 +41,8 @@
 | 프레임워크 | Next.js (App Router) + TypeScript |
 | API | Route Handler (`app/api/**/route.ts`) |
 | 검증 | zod |
-| DB / ORM | PostgreSQL + Prisma (마이그레이션·시드 포함) |
+| DB | PostgreSQL + `pg`(node-postgres), SQL 직접 작성. ORM 없음 (런타임 이미지에 CLI가 필요 없어 키트 기동 조건에 유리) |
+| 비밀번호 | Node 내장 `scrypt` (추가 패키지 없음) |
 | AI | 서버에서 AI Gateway 호출, 키는 `AI_GATEWAY_API_KEY` |
 | 린트/포맷 | ESLint + Prettier |
 | 패키지 | npm (`package-lock.json` 커밋) |
@@ -59,35 +61,36 @@
 │   ├── <domain>/
 │   │   ├── schema.ts          # zod 요청/응답 스키마, 타입
 │   │   ├── service.ts         # 비즈니스 로직
-│   │   └── repository.ts      # Prisma 접근
+│   │   └── repository.ts      # DB 접근 (SQL). 작으면 service에 합쳐도 됨
 │   ├── ai/                    # AI Gateway 호출
-│   ├── db.ts                  # Prisma client
+│   ├── db/
+│   │   ├── client.ts          # pg 연결 풀, query()
+│   │   ├── migrations.ts      # 스키마 변경 목록 (SQL)
+│   │   └── init.ts            # 서버 시작 시 마이그레이션·시드 계정
 │   ├── errors.ts              # AppError
-│   └── response.ts            # ok() / fail() / withHandler()
-├── prisma/
-│   ├── schema.prisma
-│   ├── migrations/
-│   └── seed.ts                # 시드 계정·데모 데이터
+│   └── response.ts            # ok() / fail() / withHandler() / parseBody()
+├── instrumentation.ts         # 서버 시작 시 server/db/init.ts 호출
 ├── e2e/                       # 키트 E2E (흐름별 spec)
 ├── docs/                      # problem.yaml, scenarios.yaml, 컨벤션
 ├── Dockerfile
 └── docker-compose.yml
 ```
 
-- **BE 담당 폴더: `app/api/`, `server/`, `prisma/`, `app/%5F%5Fhealth/`**
+- **BE 담당 폴더: `app/api/`, `server/`, `app/%5F%5Fhealth/`, `instrumentation.ts`**
 - 공용 파일(`package.json`, `Dockerfile`, `docker-compose.yml`, `next.config.*`, `.env.example`) 수정 시 디스코드에 먼저 알립니다.
 - `server/` 파일 맨 위에 `import "server-only"`를 넣어 FE에서 실수로 가져오지 못하게 합니다.
   - 예외: `server/*/schema.ts`는 FE가 `import type`으로 타입을 가져가는 파일이라 `server-only`를 넣지 않습니다(DB·키 접근 코드 금지).
+  - 예외: 서버 시작 시(`instrumentation.ts`) 불러오는 `server/db/*`, `server/auth/password.ts`도 넣지 않습니다.
 
 ## 4. 레이어 규칙
 
 ```
-route.ts → service → repository → Prisma
+route.ts → service → repository → DB (server/db/client.ts의 query)
 ```
 
-- **route.ts**: 요청 파싱, zod 검증, 인증 확인, service 호출, 응답 반환. Prisma 직접 사용 금지
+- **route.ts**: 요청 파싱(`parseBody`), 인증 확인(`requireUser`), service 호출, 응답 반환. SQL 직접 사용 금지
 - **service**: 비즈니스 로직, 실패 시 `throw new AppError(...)`
-- **repository**: Prisma 조회/저장만
+- **repository**: SQL 조회/저장만. 파라미터는 항상 `$1, $2 …`로 넘기고 문자열로 SQL을 이어 붙이지 않음
 - 모든 route는 `withHandler()`로 감싸 에러를 공통 응답 형식으로 변환
 
 ## 5. 네이밍
@@ -99,8 +102,8 @@ route.ts → service → repository → Prisma
 | zod 스키마 변수 | camelCase + Schema | `guideRequestSchema` |
 | 상수 | UPPER_SNAKE_CASE | `MAX_IMAGE_SIZE` |
 | 파일 (server/) | kebab-case | `guide-session.ts` |
-| Prisma 모델 | 단수 PascalCase, 필드 camelCase | `model GuideSession { userId Int }` |
-| DB 테이블 | 복수 snake_case (`@@map`) | `@@map("guide_sessions")` |
+| DB 테이블 | 복수 snake_case | `guide_histories` |
+| DB 컬럼 | snake_case, 응답에서 camelCase로 변환 | `created_at` → `createdAt` |
 | 함수 동사 | get / list / create / update / delete | `listSessions` |
 
 ## 6. 에러 처리
@@ -112,11 +115,12 @@ route.ts → service → repository → Prisma
 
 ## 7. DB 규칙
 
-- PK: `id` (Int, autoincrement), 모든 테이블에 `createdAt`, `updatedAt`
-- FK 필드: `<대상>Id` (예: `userId`)
-- 스키마 변경은 **Prisma 마이그레이션으로만** (`npx prisma migrate dev --name <설명>`). 머지된 마이그레이션 파일 수정 금지
-- ⚠️ 2명이 동시에 마이그레이션을 만들면 충돌 → **생성 전 디스코드에 알리고 `main` 최신을 pull 한 뒤 생성**
-- E2E에 필요한 선행 데이터와 시드 계정은 `prisma/seed.ts`에서 만듦 (앞 흐름이 만든 데이터에 기대지 않음)
+- PK: `id SERIAL`, 모든 테이블에 `created_at TIMESTAMPTZ`
+- FK 컬럼: `<대상 단수>_id` (예: `user_id`), 사용자 데이터는 `ON DELETE CASCADE`
+- 스키마 변경은 **`server/db/migrations.ts`에 새 항목을 추가해서만**. 이미 머지된 항목은 수정 금지 (새 id로 추가)
+- ⚠️ 2명이 동시에 마이그레이션을 추가하면 번호 충돌 → **추가 전 디스코드에 알리고 `main` 최신을 pull 한 뒤 추가**
+- E2E에 필요한 선행 데이터와 시드 계정은 `server/db/init.ts`의 시드에서 만듦 (앞 흐름이 만든 데이터에 기대지 않음)
+- 현재 테이블: `users`, `sessions`, `user_settings`, `guide_histories` (화면 이미지는 어떤 테이블에도 저장하지 않음)
 
 ## 8. AI 호출 규칙
 
@@ -143,7 +147,7 @@ route.ts → service → repository → Prisma
 
 | 담당자 | 작업 |
 |---|---|
-| BE-1 이감재 | 공통 코드(`server/response.ts`, `server/errors.ts`), Prisma·DB·시드 계정, Docker·배포·CI, 로그인·설정·도움 기록 API |
+| BE-1 이감재 | 공통 코드(`server/response.ts`, `server/errors.ts`), DB·마이그레이션·시드 계정, Docker·배포·CI, 로그인·설정·도움 기록 API |
 | BE-2 hyuckkim | 화면 분석·안내 API(`POST /api/guides`), AI Gateway 호출(`server/ai/`), 위험 동작 판단 |
 
 ## 12. 에러 코드 목록
@@ -160,5 +164,6 @@ route.ts → service → repository → Prisma
 | `AI_TIMEOUT` | 503 | AI 응답 시간 초과 |
 | `AI_FAILED` | 503 | AI 응답 실패 또는 해석 불가 |
 | `AI_BUDGET_EXCEEDED` | 429 | 팀 AI 예산 소진·요청 제한 |
+| `DB_UNAVAILABLE` | 503 | DB 연결 정보가 없음 (예: DB를 연결하지 않은 배포 환경) |
 | `INTERNAL_SERVER_ERROR` | 500 | 알 수 없는 서버 오류 |
 | (추가 시 여기에 기록) | | |

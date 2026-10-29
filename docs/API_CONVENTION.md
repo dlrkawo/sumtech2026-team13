@@ -11,7 +11,7 @@
 - sumtech 2026 해커톤 팀 13 (PM 1, FE 2, BE 2)
 - 서비스: 화면을 공유하면 AI가 현재 화면을 분석해 어디를 누를지 단계별로 안내
 - 구조: **Next.js 풀스택 하나** (레포 루트). FE 화면과 BE API가 같은 앱, 같은 포트(3000)
-  - FE 담당: `app/`의 화면, `components/` / BE 담당: `app/api/`, `server/`, `prisma/`
+  - FE 담당: `app/`의 화면, `components/` / BE 담당: `app/api/`, `server/`, `instrumentation.ts`
 - 레포: https://github.com/dlrkawo/sumtech2026-team13
 
 ## 1. 주소
@@ -110,7 +110,7 @@
 
 - E2E는 `docs/scenarios.yaml`의 메뉴·버튼 이름으로 화면을 조작합니다.
 - FE는 버튼·메뉴 글자를 scenarios.yaml과 똑같이 맞추고, 바꾸면 scenarios.yaml과 spec도 같은 commit에서 수정
-- E2E에 필요한 선행 데이터는 BE가 `prisma/seed.ts`로 준비, 업로드용 이미지는 `e2e/fixtures/`에 커밋 (파일당 10MB 이하)
+- E2E에 필요한 선행 데이터는 BE가 `server/db/init.ts`의 시드로 준비, 업로드용 이미지는 `e2e/fixtures/`에 커밋 (파일당 10MB 이하)
 - E2E는 실제 앱과 실제 AI 응답으로 돌기 때문에 가짜 응답(목업)으로 통과시키지 않음. 목업은 개발 중에만 사용
 - 주 사용 플랫폼(desktop / mobile / both)은 scenarios.yaml에서 정하고, 그 화면 크기(PC 1440×900, 모바일 390×844)에서 화면이 깨지지 않아야 함
 - 로그인 전에는 로그인이 필요한 화면이 열리지 않아야 하고, 없는 주소는 404 화면
@@ -130,18 +130,19 @@
 | 기능 | 메서드 | URL | 요청 | 응답 `data` | 로그인 | 담당 BE | 흐름 | 상태 |
 |---|---|---|---|---|---|---|---|---|
 | 헬스체크 (키트) | GET | `/__health` | - | `{ releaseId }` (공통 응답 형식 아님) | 불필요 | 이감재 | - | 배포 |
-| 회원가입 | POST | `/api/auth/signup` | `AuthRequest` | `AuthUserResponse` (201, 쿠키 설정) | 불필요 | 이감재 | S1 | 명세 |
-| 로그인 | POST | `/api/auth/login` | `AuthRequest` | `AuthUserResponse` (쿠키 설정) | 불필요 | 이감재 | S2~S8 | 명세 |
-| 로그아웃 | POST | `/api/auth/logout` | - | 204 (쿠키 삭제) | 필요 | 이감재 | - | 명세 |
-| 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 새로고침 시 로그인 유지 | 명세 |
-| 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 명세 |
-| 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 명세 |
+| 회원가입 | POST | `/api/auth/signup` | `AuthRequest` | `AuthUserResponse` (201, 쿠키 설정) | 불필요 | 이감재 | S1 | 구현 |
+| 로그인 | POST | `/api/auth/login` | `AuthRequest` | `AuthUserResponse` (쿠키 설정) | 불필요 | 이감재 | S2~S8 | 구현 |
+| 로그아웃 | POST | `/api/auth/logout` | - | 204 (쿠키 삭제) | 필요 | 이감재 | - | 구현 |
+| 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 새로고침 시 로그인 유지 | 구현 |
+| 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
+| 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
 | 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 명세 |
-| 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` (최신순, 최대 50개) | 필요 | 이감재 | S7 | 명세 |
-| 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 개인정보 보호 | 명세 |
+| 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` (최신순, 최대 50개) | 필요 | 이감재 | S7 | 구현 |
+| 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 개인정보 보호 | 구현 |
 
 - 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`
 - 설정 기본값: 화면 가장자리 표시 켜짐, 음성 인식 꺼짐, 누를 곳 표시 `BORDER`, 위험 경고 켜짐, 기록 저장 켜짐 (`DEFAULT_SETTINGS`)
 - `POST /api/guides`의 `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 다음 단계를 이어서 판단한다
 - `POST /api/guides`는 기록 저장 설정이 켜져 있으면 질문·안내 문장만 도움 기록에 남긴다 (화면 이미지는 저장하지 않음)
 - 상태: 명세(타입 확정) → 구현 → 배포
+- 도움 기록 저장: hyuckkim의 `POST /api/guides`는 안내를 만든 뒤 `recordGuideHistory(userId, question, instruction)`(`server/history/service.ts`)을 호출. 위험 경고 여부는 `getSettings(userId).riskWarning`(`server/settings/service.ts`)
