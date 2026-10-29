@@ -79,7 +79,9 @@ export function IconMode(props: IconModeProps) {
           sm:fixed sm:inset-y-0 sm:left-[300px] sm:right-0 sm:w-auto sm:items-center sm:justify-center sm:gap-[12px] sm:px-[28px] sm:py-[12px]"
       >
         <div className="flex flex-wrap items-center justify-center gap-[14px]">
-          <div className="flex shrink-0 flex-col items-center gap-[6px]">
+          {/* 세로가 짧은 화면(높이 800px 이하, 예: 1280×720)에서는 '설정'을 캐릭터 옆에 둔다.
+              아래에 쌓으면 이 줄이 길어져 안내 말풍선이 줄어들고, 사진·누를 곳이 잘려 보이지 않았다 */}
+          <div className="flex shrink-0 flex-col items-center gap-[6px] [@media(max-height:800px)]:flex-row [@media(max-height:800px)]:gap-[14px]">
             {/* 캐릭터 아래 글자는 scenarios.yaml의 단계 이름("'곁길 도우미 열기'를 누른다")과 같게 보여 준다.
                 접근성 이름은 aria-label이 정하므로 글자를 바꿔도 E2E 선택자는 그대로다 */}
             <button

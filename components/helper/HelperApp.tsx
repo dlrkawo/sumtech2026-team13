@@ -173,8 +173,9 @@ export function HelperApp() {
   return (
     <>
       {screens}
+      {/* 넓은 화면에서는 왼쪽 소개 영역 아래쪽에 둔다. 오른쪽 위에 두면 안내가 길 때 위로 올라온 캐릭터·설정·▶■ 막대 줄과 겹쳤다 */}
       {view === "icon" && pip.isSupported && (
-        <div className="z-30 flex flex-col items-center gap-[6px] pb-[20px] sm:fixed sm:top-[16px] sm:right-[16px] sm:items-end sm:pb-0">
+        <div className="z-30 flex flex-col items-center gap-[6px] pb-[20px] sm:fixed sm:bottom-[24px] sm:left-[28px] sm:items-start sm:pb-0">
           <button
             type="button"
             onClick={() => void pip.open()}
