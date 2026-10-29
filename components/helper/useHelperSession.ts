@@ -13,10 +13,15 @@ import { fileToDataUrl } from "@/lib/image";
 
 // 말풍선에 띄울 짧은 안내 (서버 응답이 아닌 것)
 //   needStart: ▶를 먼저 눌러야 함 / needScreen: 보낼 화면 사진이 없음 (reason: 화면 공유 실패 문구)
+//   samePhoto: 사진 모드에서 지난번과 같은 사진으로 '다음'을 누름 (바뀐 화면을 올려야 이어 갈 수 있음)
 export type HelperNotice =
   | { kind: "needStart" }
   | { kind: "needScreen"; reason?: string }
+  | { kind: "samePhoto" }
   | { kind: "error"; error: UserError };
+
+// 지금 물어볼 때 쓰는 화면: 화면 공유 / 올린 사진
+export type ScreenSource = "share" | "photo";
 
 export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   const share = useScreenShare();
@@ -29,14 +34,20 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   // 처음엔 캐릭터만 보이고, 캐릭터를 눌러야 안내·조작부가 펼쳐진다
   const [isBubbleOpen, setBubbleOpen] = useState(false);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
-  // 같은 질문을 이어서 물을 때마다 +1, 새 질문을 물으면 1로 되돌아간다 (v2 S2·S3)
+  // 같은 일을 새 화면으로 이어서 물을 때마다 +1, 새로 물으면 1로 되돌아간다 (v2 S2·S3)
   const [step, setStep] = useState(1);
+  // 공유와 사진이 둘 다 있으면 가장 최근에 고른 쪽으로 묻는다 (▶ → 공유 화면, 사진 고르기 → 올린 사진)
+  const [prefersShare, setPrefersShare] = useState(true);
+  const source: ScreenSource | null =
+    share.isSharing && (prefersShare || !photo) ? "share" : photo ? "photo" : null;
 
   // ▶: 도움을 켜고 화면 공유를 요청한다. 공유가 안 돼도 켜진 상태로 두고 사진 올리기로 이어 간다
+  // 이미 공유 중이면(사진으로 묻다가 다시 누름) 공유 화면으로 돌아오기만 한다
   const play = useCallback(async () => {
     setIsOn(true);
     setBubbleOpen(true);
     setNotice(null);
+    setPrefersShare(true);
     await share.start();
   }, [share]);
 
@@ -50,12 +61,14 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     setNotice(null);
     setLastQuestion(null);
     setStep(1);
+    setPrefersShare(true);
   }, [share, guide]);
 
   const pickPhoto = useCallback(async (file: File) => {
     setBubbleOpen(true);
     try {
       setPhoto(await fileToDataUrl(file));
+      setPrefersShare(false);
       setIsOn(true);
       setNotice(null);
     } catch (e) {
@@ -66,18 +79,22 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   // 실제 분석 요청 한 번. image는 호출하는 쪽에서 이미 정해 온다 (공유 캡처 / 올린 사진 / 다음 화면 사진)
   const runGuide = useCallback(
     async (image: string, question: string, isContinuation: boolean) => {
-      // 같은 일을 이어서 물으면 바로 전 안내를 같이 보내 다음 단계를 받는다 (API_CONVENTION.md 10번)
-      const prev = guide.state.status === "success" ? guide.state.data : null;
-      const isSameTask = isContinuation || lastQuestion === question;
-      const previousInstruction = isSameTask && prev?.status === "IN_PROGRESS" ? prev.instruction : undefined;
+      // 같은 일을 새 화면으로 이어서 물으면 이번 일에서 받은 안내를 모두 보내 다음 단계를 받는다 (API_CONVENTION.md 10-1)
+      // 같은 사진으로 다시 물으면 화면이 그대로이므로 새로 묻기(1단계)로 본다
+      const prev = guide.state.status === "success" ? guide.state : null;
+      const isSameTask = (isContinuation || lastQuestion === question) && image !== shownImage;
+      const previousInstructions =
+        isSameTask && prev?.data.status === "IN_PROGRESS"
+          ? [...(prev.request.previousInstructions ?? []), prev.data.instruction]
+          : [];
 
       setLastQuestion(question);
-      setStep(previousInstruction ? (s) => s + 1 : 1);
+      setStep(previousInstructions.length > 0 ? (s) => s + 1 : 1);
       setNotice(null);
       setShownImage(image);
-      await guide.ask({ image, question, ...(previousInstruction ? { previousInstruction } : {}) });
+      await guide.ask({ image, question, ...(previousInstructions.length > 0 ? { previousInstructions } : {}) });
     },
-    [guide, lastQuestion],
+    [guide, lastQuestion, shownImage],
   );
 
   const ask = useCallback(
@@ -86,15 +103,17 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
       if (!question || guide.isLoading) return;
       setBubbleOpen(true);
       if (!isOn) return setNotice({ kind: "needStart" });
-      // 공유 중이면 지금 장면을 찍어 보내고, 아니면 올린 사진으로 묻는다
+      // 공유 화면이면 지금 장면을 찍어 보내고, 사진이면 올린 사진으로 묻는다
       let image: string;
-      if (share.isSharing) {
+      if (source === "share") {
         try {
           image = share.captureFrame();
         } catch (e) {
           return setNotice({ kind: "error", error: toUserError(e) });
         }
-      } else if (photo) {
+      } else if (source === "photo" && photo) {
+        // 사진은 스스로 바뀌지 않는다. 지난번과 같은 사진으로 '다음'을 누르면 옛 화면을 다음 화면처럼 보내게 되므로 묻지 않는다
+        if (options?.next && photo === shownImage) return setNotice({ kind: "samePhoto" });
         image = photo;
       } else {
         return setNotice({ kind: "needScreen", reason: share.error?.message });
@@ -102,7 +121,7 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
 
       await runGuide(image, question, Boolean(options?.next));
     },
-    [guide.isLoading, isOn, share, photo, runGuide],
+    [guide.isLoading, isOn, source, share, photo, shownImage, runGuide],
   );
 
   const next = useCallback(() => {
@@ -124,10 +143,12 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     isSharing: share.isSharing,
     // 브라우저의 화면 고르기 창이 떠 있음
     isPicking: share.status === "starting",
-    // ▶는 도움이 켜져 있어도, 공유 중이거나 고르는 중이 아니면 다시 누를 수 있다 (취소·공유 중지·사진 먼저 올림)
-    canPlay: share.status !== "sharing" && share.status !== "starting",
+    // ▶는 도움이 켜져 있어도, 공유 화면으로 묻는 중이거나 고르는 중이 아니면 다시 누를 수 있다
+    // (취소·공유 중지·사진 먼저 올림·공유 중에 사진으로 바꿈 → 다시 공유 화면으로)
+    canPlay: source !== "share" && share.status !== "starting",
     hasScreen: share.isSharing || photo !== null,
     hasPhoto: photo !== null,
+    source,
     isAnswering: guide.isLoading,
     guide: guide.state.status === "success" ? guide.state.data : null,
     guideError: guide.state.status === "error" ? guide.state.error : null,

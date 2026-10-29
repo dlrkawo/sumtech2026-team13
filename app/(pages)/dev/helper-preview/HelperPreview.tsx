@@ -40,6 +40,7 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
         isPicking={false}
         hasScreen
         hasPhoto
+        source="photo"
         isAnswering={mock === "loading"}
         guide={guide}
         guideImage={image}

@@ -75,6 +75,7 @@ export function HelperApp() {
           isPicking={session.isPicking}
           hasScreen={session.hasScreen}
           hasPhoto={session.hasPhoto}
+          source={session.source}
           isAnswering={session.isAnswering}
           guide={session.guide}
           guideImage={session.shownImage}

@@ -7,7 +7,7 @@ import { PetChar, type PetMood, type PetSign } from "./PetChar";
 import { PromptBar, type PromptBarProps } from "./PromptBar";
 import type { HelperStatus } from "./StatusIcon";
 import { FOCUS_RING } from "./styles";
-import type { HelperNotice } from "./useHelperSession";
+import type { HelperNotice, ScreenSource } from "./useHelperSession";
 
 // 아이콘 모드 (v6): 말풍선 · ▶■상태 막대 + 캐릭터 · 입력창 + 사진 올리기 + 설정을 Landing(왼쪽 소개 영역) 오른쪽에 세로로 쌓는다.
 // 미니 브라우저 창 기준: 좁을 때는 Landing 아래로 이어지는 세로형, sm부터는 오른쪽 안내·조작 영역(가로형, Landing과 같은 300px 기준)
@@ -22,6 +22,8 @@ export interface IconModeProps {
   // 공유 중인 화면이나 올린 사진이 있음
   hasScreen: boolean;
   hasPhoto: boolean;
+  // 지금 물어볼 때 쓰는 화면 (공유 화면 / 올린 사진, 없으면 null)
+  source: ScreenSource | null;
   isAnswering: boolean;
   guide: GuideResponse | null;
   guideImage: string | null;
@@ -61,6 +63,7 @@ export function IconMode(props: IconModeProps) {
     onRetry: props.onRetry,
     onClose: () => props.onToggleBubble(false),
     hasPhoto: props.hasPhoto,
+    source: props.source,
     onPickPhoto: props.onPickPhoto,
   };
 
