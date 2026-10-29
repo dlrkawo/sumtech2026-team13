@@ -20,6 +20,7 @@ export function HistoryWindow({
   items,
   error,
   isLoading,
+  isSaving,
   onClear,
   onBack,
   onStart,
@@ -27,6 +28,8 @@ export function HistoryWindow({
   items: GuideHistoryResponse | null;
   error: UserError | null;
   isLoading: boolean;
+  // 설정 창에서 바꾼 설정을 아직 저장하는 중 (끝나기 전에는 '도움 시작하기'를 누를 수 없다)
+  isSaving: boolean;
   onClear: () => Promise<void>;
   onBack: () => void;
   onStart: () => void;
@@ -90,7 +93,7 @@ export function HistoryWindow({
           )}
         </>
       )}
-      <button type="button" className={BUTTON_PRIMARY} onClick={onStart}>
+      <button type="button" className={BUTTON_PRIMARY} disabled={isSaving} onClick={onStart}>
         도움 시작하기
       </button>
     </WindowFrame>
