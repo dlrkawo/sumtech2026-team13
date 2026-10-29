@@ -160,4 +160,6 @@ router → service → repository → DB
 |---|---|---|
 | `VALIDATION_ERROR` | 400 | 요청 값 검증 실패 |
 | `INTERNAL_SERVER_ERROR` | 500 | 알 수 없는 서버 오류 |
+| `ELEMENT_LOCATION_INVALID_IMAGE` | 400 | PNG/JPEG/WEBP가 아닌 이미지 업로드 |
+| `ELEMENT_LOCATION_AI_FAILED` | 500 | AI 게이트웨이 호출 실패 또는 응답 파싱 실패 |
 | (추가 시 여기에 기록) | | |
