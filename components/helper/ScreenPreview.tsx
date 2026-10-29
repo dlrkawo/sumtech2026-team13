@@ -8,7 +8,7 @@ export function ScreenPreview({ image, target }: { image: string; target: GuideT
     <div className="relative mx-auto w-fit max-w-full shrink-0 overflow-hidden rounded-[12px] border-2 border-[#C9C6BE] bg-white">
       {/* data URL 사진이라 next/image 최적화 대상이 아니다 */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={image} alt="물어볼 때 본 화면" className="block h-auto max-h-[200px] w-auto max-w-full" />
+      <img src={image} alt="물어볼 때 본 화면" className="block h-auto max-h-[200px] w-auto max-w-full xl:max-h-[clamp(200px,calc(100dvh_-_400px),560px)]" />
       {target && (
         <div
           data-testid="click-highlight"

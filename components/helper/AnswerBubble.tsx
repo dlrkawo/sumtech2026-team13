@@ -58,7 +58,7 @@ export function AnswerBubble({
   return (
     <section
       aria-label="곁길 답변"
-      className={`flex w-full max-w-[420px] flex-col break-keep overflow-hidden rounded-[28px] border-2 bg-white shadow-[0_14px_34px_rgba(0,0,0,.22)] sm:max-w-[470px] ${isRisk ? "border-[#C8102E]" : "border-[#1D4E89]"}`}
+      className={`flex w-full max-w-[420px] flex-col break-keep overflow-hidden rounded-[28px] border-2 bg-white shadow-[0_14px_34px_rgba(0,0,0,.22)] sm:max-w-[470px] xl:max-w-[1200px] ${isRisk ? "border-[#C8102E]" : "border-[#1D4E89]"}`}
     >
       <div className="flex items-center gap-[12px] border-b border-[#E6E3DC] py-[8px] pr-[12px] pl-[18px]">
         <p className="flex-1 text-[20px] font-bold text-[#1D4E89]" aria-live="polite">
@@ -101,7 +101,7 @@ export function AnswerBubble({
           접기
         </button>
       </div>
-      <div className="flex max-h-[44dvh] flex-col gap-[10px] [&>*]:shrink-0 overflow-y-auto px-[18px] pt-[12px] pb-[16px] text-[20px] sm:max-h-[56dvh]">
+      <div className="flex max-h-[44dvh] flex-col gap-[10px] [&>*]:shrink-0 overflow-y-auto px-[18px] pt-[12px] pb-[16px] text-[20px] sm:max-h-[56dvh] xl:max-h-[70dvh] xl:px-[24px]">
         {isLoading && (
           <div className="flex items-center gap-[12px]">
             <span
@@ -112,32 +112,44 @@ export function AnswerBubble({
           </div>
         )}
 
+        {/* 넓은 화면(xl, 1280px 이상)에서는 위험 경고를 맨 위에, 그 아래 왼쪽에 안내·버튼, 오른쪽에 화면 사진을 크게 둔다.
+            좁은 화면·PiP 작은 창에서는 지금처럼 세로로 쌓는다 */}
         {showGuide && (
-          <>
+          <div
+            className={`flex flex-col gap-[10px] ${image ? "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] xl:grid-rows-[auto_auto_1fr] xl:gap-x-[24px] xl:[grid-template-areas:'risk_risk'_'text_img'_'act_img']" : ""}`}
+          >
             {guide.risk && (
               <p
                 role="alert"
-                className="flex items-start gap-[10px] rounded-[14px] border-2 border-[#C8102E] bg-[#FBE9E9] px-[14px] py-[12px] text-[22px] font-bold text-[#9B1C1C]"
+                className="flex items-start gap-[10px] rounded-[14px] border-2 border-[#C8102E] bg-[#FBE9E9] px-[14px] py-[12px] text-[22px] font-bold text-[#9B1C1C] xl:[grid-area:risk]"
               >
                 <span aria-hidden="true">!</span>
                 <span>{guide.risk.message}</span>
               </p>
             )}
-            <p className="flex items-baseline gap-[8px] text-[20px] font-bold text-[#1D4E89]">
-              {showStatusLabel && <span>{STATUS_LABEL[guide.status]}</span>}
-              {guide.status === "IN_PROGRESS" && <span className="text-[14px] font-normal text-[#454B53]">{step}단계</span>}
-            </p>
-            <p data-testid="guide-text" className="text-[24px] leading-[1.45] font-bold">
-              {guide.instruction}
-            </p>
-            {image && <ScreenPreview image={image} target={guide.target} />}
-            {guide.status === "IN_PROGRESS" && (
-              <button type="button" className={BUTTON_SECONDARY} onClick={onNext}>
-                눌렀어요, 다음 알려 주세요
-              </button>
+            <div className="flex flex-col gap-[10px] xl:[grid-area:text]">
+              <p className="flex items-baseline gap-[8px] text-[20px] font-bold text-[#1D4E89]">
+                {showStatusLabel && <span>{STATUS_LABEL[guide.status]}</span>}
+                {guide.status === "IN_PROGRESS" && <span className="text-[14px] font-normal text-[#454B53]">{step}단계</span>}
+              </p>
+              <p data-testid="guide-text" className="text-[24px] leading-[1.45] font-bold xl:text-[28px]">
+                {guide.instruction}
+              </p>
+            </div>
+            {image && (
+              <div className="xl:[grid-area:img]">
+                <ScreenPreview image={image} target={guide.target} />
+              </div>
             )}
-            <p className="text-[20px] text-[#454B53]">누르는 건 직접 해 주세요.</p>
-          </>
+            <div className="flex flex-col gap-[10px] xl:[grid-area:act]">
+              {guide.status === "IN_PROGRESS" && (
+                <button type="button" className={BUTTON_SECONDARY} onClick={onNext}>
+                  눌렀어요, 다음 알려 주세요
+                </button>
+              )}
+              <p className="text-[20px] text-[#454B53]">누르는 건 직접 해 주세요.</p>
+            </div>
+          </div>
         )}
 
         {!isLoading && error && !notice && (
