@@ -75,7 +75,8 @@ export async function createChatCompletion({
   const data = await res.json().catch(() => null);
   const text: unknown = data?.choices?.[0]?.message?.content;
   if (typeof text !== "string") {
-    console.error("[ai] unexpected gateway response", JSON.stringify(data).slice(0, 500));
+    // 응답 본문에는 화면에서 읽은 내용이 섞일 수 있어 구조만 남긴다
+    console.error("[ai] unexpected gateway response keys", data && typeof data === "object" ? Object.keys(data) : typeof data);
     throw aiErrors.failed();
   }
 
