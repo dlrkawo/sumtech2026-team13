@@ -4,7 +4,6 @@ import { AnswerBubble, type AnswerBubbleProps } from "./AnswerBubble";
 import { ControlPill } from "./ControlPill";
 import { EdgeFrame } from "./EdgeFrame";
 import { PetChar, type PetMood, type PetSign } from "./PetChar";
-import { PhotoUpload } from "./PhotoUpload";
 import { PromptBar, type PromptBarProps } from "./PromptBar";
 import type { HelperStatus } from "./StatusIcon";
 import { FOCUS_RING } from "./styles";
@@ -57,15 +56,12 @@ export function IconMode(props: IconModeProps) {
     onNext: props.onNext,
     onRetry: props.onRetry,
     onClose: () => props.onToggleBubble(false),
+    onPickPhoto: props.onPickPhoto,
   };
 
   return (
     <>
       {props.showEdge && <EdgeFrame />}
-      {/* 화면 사진 올리기: 화면에는 보이지 않지만(자동 테스트용 길) 입력은 그대로 둔다 */}
-      <div className="sr-only">
-        <PhotoUpload hasPhoto={props.hasPhoto} onPick={props.onPickPhoto} />
-      </div>
       {/* 왼쪽 소개 영역(Landing)과 짝을 이루는 오른쪽 안내·조작 영역.
           처음엔 캐릭터(+설정)만 보이고, 캐릭터를 누르면 안내·시작/멈추기·입력창이 그 아래로 펼쳐진다.
           좁을 때는 Landing 아래로 이어지는 한 화면(세로형), sm부터는 Landing 폭(300px)만큼 오른쪽에 고정(가로형) */}
