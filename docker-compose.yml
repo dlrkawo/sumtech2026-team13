@@ -1,0 +1,59 @@
+# 주최 측 실행과 CI가 같은 방식으로 실행하는 구성이다. 저장소 루트의 docker-compose.yml로 복사하고, 같은 위치에 Dockerfile을 만든다.
+# 주최 측 실행은 이 파일로 앱을 빌드(10분 안)하고 빈 DB에서 띄운 뒤, 기동을 시작한 때부터 2분 안에 /__health가 200이 되면
+# e2e/scenarios의 spec을 돌린다. DB 준비·마이그레이션·시드 데이터 넣기도 이 2분 안에 끝나야 한다.
+#
+# 지킬 것
+# - 서비스 이름 app과 ports의 "3000:3000"은 바꾸지 않는다. 앱은 컨테이너 안에서 0.0.0.0:3000으로 받는다.
+#   주최 측 실행은 왼쪽 호스트 포트를 빈 포트로 바꿔 끼우므로, 앱 설정·코드에 http://localhost:3000 같은 절대 주소를 쓰지 않는다
+#   (로그인 콜백·리다이렉트·CORS·API 주소는 요청 주소 기준 상대 경로로). 브라우저는 3000번 app 하나만 거친다.
+# - app 말고 다른 서비스(db 등)에는 ports를 두지 않는다. container_name도 쓰지 않는다. 주최 측 실행은 여러 팀을 동시에 띄운다.
+# - env_file(.env)을 쓰지 않는다. .env는 저장소에 없으므로 주최 측 실행에서 compose가 실패한다. 필요한 값은 아래 environment에 적는다.
+# - DB 데이터는 이름 붙은 볼륨(아래 db-data)에 둔다. ./data 같은 폴더 연결은 실행 사이에 데이터가 남는다.
+# - RELEASE_ID·SEED_USER_EMAIL·SEED_USER_PASSWORD·AI_GATEWAY_API_KEY 네 이름은 주최 측 실행과 CI가 그대로 읽으므로 바꾸지 않는다.
+# - SEED_USER_EMAIL·SEED_USER_PASSWORD(역할을 더 두면 그 시드 값도)는 값을 그대로 적는다. ${SEED_USER_EMAIL}처럼
+#   바깥 환경변수로 받으면 주최 측 실행에는 그 변수가 없어 빈 값이 되고, E2E가 로그인하지 못한다.
+# - 의존성 설치·컴파일은 Dockerfile에서 끝내고, app의 시작 명령은 서버 실행(필요하면 마이그레이션·시드 포함)만 한다.
+#   주최 측 실행은 app에 CPU 2개·메모리 4GB까지만 준다.
+# - 앱은 처음 뜰 때 시드 계정과 흐름에 필요한 선행 데이터를 스스로 만든다.
+#   흐름이 직접 만드는 데이터는 미리 만들지 않는다. 외부 서비스·내 컴퓨터의 파일에 기대지 않는다.
+services:
+  app:
+    build:
+      context: .
+      args:
+        # 주최 측 실행과 CI가 실행하는 commit SHA를 넣는다. /__health의 releaseId로 응답한다.
+        RELEASE_ID: ${RELEASE_ID:-dev}
+    ports:
+      - "3000:3000"
+    environment:
+      RELEASE_ID: ${RELEASE_ID:-dev}
+      DATABASE_URL: postgres://app:app@db:5432/app
+      # 시드 계정: 앱이 기동할 때 만드는 로컬 전용 계정. E2E가 이 계정으로 로그인한다. 로컬 docker 전용 값이라 저장소에 둔다.
+      # 배포 사이트의 실제 계정과 같은 비밀번호를 쓰지 않는다.
+      # 주최 측 실행은 SEED_USER_EMAIL·SEED_USER_PASSWORD만 E2E에 넘긴다(E2E_USER_EMAIL·E2E_USER_PASSWORD).
+      SEED_USER_EMAIL: student@example.com
+      SEED_USER_PASSWORD: loopthon-2026
+      # 역할이 더 있으면 같은 방식으로 시드 계정을 더 두고, e2e/env.ts의 기본값에 **같은 값**을 적는다(주최 측 실행은 env.ts 기본값으로 로그인한다).
+      # (13팀: 로그인·역할은 2-C에서 결정 예정. 조교 같은 두 번째 역할이 없으므로 키트 예시의 SEED_TA_* 는 뺐다)
+      # 주최 측 실행이 AI 키를 넣어 AI 기능도 실제로 호출된다. 서버는 이 이름으로만 키를 읽는다.
+      # 키가 비어 있어도 앱은 기동해야 한다(AI 기능만 실패 안내를 보여 준다).
+      AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

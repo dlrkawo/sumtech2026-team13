@@ -24,3 +24,7 @@ playwright-report/
 .DS_Store
 *.log
 .vercel/
+
+# Next.js가 빌드 때 만드는 타입 파일
+next-env.d.ts
+*.tsbuildinfo

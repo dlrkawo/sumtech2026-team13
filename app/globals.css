@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* 부모님용 UI 기본값 (FE 컨벤션 8번): 본문 최소 20px */
+html {
+  font-size: 20px;
+}

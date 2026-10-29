@@ -11,19 +11,40 @@ SUMTECH 2026 루프톤 13팀 서비스 저장소입니다.
 
 ## 설치·실행
 
-3단계에서 `Dockerfile`·`docker-compose.yml`을 만든 뒤 아래에 정리합니다.
+Next.js 하나(레포 루트)로 화면과 API를 함께 제공합니다. 주최 측 실행과 같은 방식인 Docker로 띄웁니다.
+
+준비물: Docker Desktop
 
 ```bash
-docker compose up --build
+docker compose down -v
+docker compose up -d --build
+curl http://localhost:3000/__health
 ```
+
+- `docker compose down -v`는 DB를 비우고 처음부터 띄웁니다(주최 측 실행과 같은 조건).
+- `/__health`가 `{"releaseId":"dev"}`로 200을 주면 정상입니다. 브라우저에서 http://localhost:3000 을 열면 첫 화면이 보입니다.
+- 끄기: `docker compose down`
+
+로컬 개발 서버(Node.js 24 필요):
+
+```bash
+npm ci
+npm run dev
+```
+
+검사: `npm run lint`, `npm run typecheck`, `npm run build` (GitHub Actions `ci`에서도 같은 검사가 돕니다)
 
 ## 환경변수
 
 | 이름 | 용도 | 설정 위치 |
 | --- | --- | --- |
-| `AI_GATEWAY_API_KEY` | 서비스의 AI 호출(필요할 때만) | `.env`(로컬), 배포 환경변수, GitHub Secrets |
+| `RELEASE_ID` | `/__health`가 응답하는 배포 commit SHA | CI·주최 측 실행이 자동으로 넣음, 배포 환경변수(배포 플랫폼의 commit 변수) |
+| `DATABASE_URL` | PostgreSQL 접속 주소 | `docker-compose.yml`(로컬 docker), 배포 환경변수 |
+| `SEED_USER_EMAIL` | E2E용 시드 계정 이메일 | `docker-compose.yml`에 값 그대로(로컬 docker 전용) |
+| `SEED_USER_PASSWORD` | E2E용 시드 계정 비밀번호 | `docker-compose.yml`에 값 그대로(로컬 docker 전용, 배포 계정과 다른 값) |
+| `AI_GATEWAY_API_KEY` | 서버의 AI Gateway 호출 | `.env`(로컬 개발), 배포 환경변수, GitHub Secrets. 저장소에 넣지 않음 |
 
-값은 커밋하지 않고 `.env.example`에는 이름만 적습니다.
+값은 커밋하지 않고 `.env.example`에는 이름만 적습니다. `AI_GATEWAY_API_KEY`가 비어 있어도 앱은 뜹니다(AI 기능만 실패 안내).
 
 ## 팀원 작업 방법
 
