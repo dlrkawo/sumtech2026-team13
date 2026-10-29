@@ -23,14 +23,20 @@ export const DEFAULT_SETTINGS: SettingsResponse = {
 };
 
 // 바꾸고 싶은 값만 보낸다. 예) { "edgeDisplay": false }
+// 타입이 틀리거나 모르는 값·키가 와도 zod 영어 기본 문구 대신 화면에 보여 줄 문장을 쓴다 ({ error })
+const SWITCH_ERROR = { error: "켜기·끄기 값을 다시 확인해 주세요." };
 export const settingsUpdateSchema = z
-  .object({
-    edgeDisplay: z.boolean(),
-    voiceInput: z.boolean(),
-    highlightStyle: z.enum(HIGHLIGHT_STYLES),
-    riskWarning: z.boolean(),
-    saveHistory: z.boolean(),
-  })
+  .object(
+    {
+      edgeDisplay: z.boolean(SWITCH_ERROR),
+      voiceInput: z.boolean(SWITCH_ERROR),
+      highlightStyle: z.enum(HIGHLIGHT_STYLES, { error: "누를 곳 표시 모양을 다시 골라 주세요." }),
+      riskWarning: z.boolean(SWITCH_ERROR),
+      saveHistory: z.boolean(SWITCH_ERROR),
+    },
+    // 본문이 객체가 아니거나 모르는 키가 있을 때 둘 다 이 문장
+    { error: "설정 값을 다시 확인해 주세요." },
+  )
   .partial()
   .strict();
 export type SettingsUpdateRequest = z.infer<typeof settingsUpdateSchema>;

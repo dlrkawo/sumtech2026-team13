@@ -55,6 +55,8 @@ export async function parseBody<S extends z.ZodType>(req: Request, schema: S): P
   return result.data;
 }
 
+// 스키마에 한국어 문구를 빠뜨려 zod 영어 기본 문구("Invalid input: …")가 나오면 화면에 그대로 보이지 않게 바꾼다
 function firstIssueMessage(error: z.ZodError): string {
-  return error.issues[0]?.message ?? "입력한 값을 다시 확인해 주세요.";
+  const message = error.issues[0]?.message;
+  return message && /[가-힣]/.test(message) ? message : "입력한 값을 다시 확인해 주세요.";
 }

@@ -21,15 +21,19 @@ export const previousInstructionSchema = z
 
 // image는 문자열인지만 여기서 보고, 형식·크기는 service에서 IMAGE_INVALID / IMAGE_TOO_LARGE로 구분해 알린다
 // 값이 아예 없을 때도 영어 기본 문구 대신 화면에 보여 줄 문장을 쓴다 (POST /api/voice-guides와 같음)
-export const guideRequestSchema = z.object({
-  image: z.string({ error: "화면 사진이 필요해요." }).min(1, "화면 사진이 필요해요."),
-  question: z
-    .string({ error: "하고 싶은 일을 적어 주세요." })
-    .trim()
-    .min(1, "하고 싶은 일을 적어 주세요.")
-    .max(200, "200자 안으로 적어 주세요."),
-  previousInstruction: previousInstructionSchema,
-});
+export const guideRequestSchema = z.object(
+  {
+    image: z.string({ error: "화면 사진이 필요해요." }).min(1, "화면 사진이 필요해요."),
+    question: z
+      .string({ error: "하고 싶은 일을 적어 주세요." })
+      .trim()
+      .min(1, "하고 싶은 일을 적어 주세요.")
+      .max(200, "200자 안으로 적어 주세요."),
+    previousInstruction: previousInstructionSchema,
+  },
+  // 본문이 객체가 아닐 때(null·배열 등)도 영어 기본 문구 대신 쓴다
+  { error: "요청 형식이 올바르지 않아요." },
+);
 export type GuideRequest = z.infer<typeof guideRequestSchema>;
 
 export const GUIDE_STATUSES = ["IN_PROGRESS", "DONE", "NEED_INFO"] as const;
