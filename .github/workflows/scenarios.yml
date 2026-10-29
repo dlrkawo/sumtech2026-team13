@@ -9,6 +9,13 @@ name: scenarios
 on:
   push:
     branches: [main]
+    # 앱·E2E에 영향이 없는 문서·실험 폴더만 바뀐 머지는 검사하지 않는다 (새 폴더가 생겨도 빠뜨리지 않게 제외 목록으로 둠)
+    paths-ignore:
+      - "docs/**"
+      - "trash/**"
+      - "**/*.md"
+      - "progress.md"
+      - "scripts/check_docs.py"
   workflow_dispatch:
 
 # main에 연달아 push하면 이전 실행은 취소하고 최신 commit만 검사한다 (실행이 쌓여 오래 걸리는 것 방지)
@@ -24,10 +31,28 @@ jobs:
       E2E_BASE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v7
+      # docker-compose.yml을 그대로 읽어 같은 이미지를 만들되, 레이어를 GitHub Actions 캐시에 남겨 다음 실행에서 다시 쓴다
+      # (package-lock.json이 그대로면 npm ci 레이어를 건너뜀). compose 파일·Dockerfile은 바꾸지 않는다.
+      - name: Find app image name
+        run: echo "APP_IMAGE=$(docker compose config --images | grep -- '-app$')" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      - name: Build app image (with cache)
+        uses: docker/bake-action@v6
+        env:
+          RELEASE_ID: ${{ github.sha }}
+        with:
+          source: .
+          files: docker-compose.yml
+          targets: app
+          load: true
+          set: |
+            app.tags=${{ env.APP_IMAGE }}
+            app.cache-from=type=gha,scope=scenarios-app
+            app.cache-to=type=gha,scope=scenarios-app,mode=max
       - name: Start app and database
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
-        run: RELEASE_ID="$GITHUB_SHA" docker compose up -d --build
+        run: RELEASE_ID="$GITHUB_SHA" docker compose up -d --no-build
       - name: Wait for /__health
         run: |
           # 주최 측 실행은 기동을 시작한 때부터 2분을 기다린다. 여기서도 같은 시간 안에 떠야 한다.
@@ -51,6 +76,12 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+      # 브라우저 다운로드를 건너뛴다. 키는 e2e의 Playwright 버전이 바뀌면 새로 받도록 package.json 기준
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package.json') }}
       - name: Run scenario E2E
         working-directory: e2e
         run: |
