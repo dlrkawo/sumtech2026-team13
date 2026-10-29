@@ -31,6 +31,7 @@ export interface AnswerBubbleProps {
   onNext: () => void;
   onRetry: () => void;
   onClose: () => void;
+  onPickPhoto: (file: File) => void;
 }
 
 export function AnswerBubble({
@@ -45,6 +46,7 @@ export function AnswerBubble({
   onNext,
   onRetry,
   onClose,
+  onPickPhoto,
 }: AnswerBubbleProps) {
   const isRisk = !isLoading && guide?.risk != null;
   const showGuide = !isLoading && !error && guide !== null;
@@ -60,6 +62,34 @@ export function AnswerBubble({
         <p className="flex-1 text-[20px] font-bold text-[#1D4E89]" aria-live="polite">
           {title}
         </p>
+        <label
+          className={`flex h-[56px] w-[56px] shrink-0 cursor-pointer items-center justify-center rounded-[28px] border-2 border-[#C9C6BE] bg-white hover:bg-[#F0EFEB] focus-within:outline-[4px] focus-within:outline-offset-[3px] focus-within:outline-[#E8A200]`}
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <circle cx="9" cy="11" r="2" />
+            <path d="M21 16l-5-5-8 8" />
+          </svg>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            aria-label="화면 사진 올리기"
+            className="sr-only"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onPickPhoto(file);
+              e.target.value = "";
+            }}
+          />
+        </label>
         <button
           type="button"
           onClick={onClose}
