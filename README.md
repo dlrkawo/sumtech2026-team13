@@ -51,7 +51,7 @@ npm run dev
 | `SEED_USER_PASSWORD` | E2E용 시드 계정 비밀번호 | `docker-compose.yml`에 값 그대로(로컬 docker 전용, 배포 계정과 다른 값) |
 | `AI_GATEWAY_API_KEY` | 서버의 AI Gateway 호출 | `.env`(로컬 개발), 배포 환경변수, GitHub Secrets. 저장소에 넣지 않음 |
 
-값은 커밋하지 않고 `.env.example`에는 이름만 적습니다. `AI_GATEWAY_API_KEY`가 비어 있어도 앱은 뜹니다(AI 기능만 실패 안내).
+값은 커밋하지 않고 `.env.example`에는 이름만 적습니다. `AI_GATEWAY_API_KEY`가 비어 있어도 앱은 뜹니다(AI 기능만 실패 안내). 키는 한 줄로 넣습니다. 앞뒤 공백·줄바꿈은 서버가 지우지만, 키 가운데에 줄바꿈이 있으면(두 줄로 저장된 Secret 등) AI 기능이 `AI_UNAVAILABLE`로 실패하고 서버 로그에 안내가 남습니다.
 
 ## 팀원 작업 방법
 

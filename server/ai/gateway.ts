@@ -53,8 +53,14 @@ async function postToGateway(
   timeoutMs: number,
   extraHeaders: Record<string, string> = {},
 ): Promise<unknown> {
-  const apiKey = process.env.AI_GATEWAY_API_KEY;
+  // 붙여 넣다 따라온 앞뒤 공백·줄바꿈을 지운다. GitHub Secret에 줄바꿈이 섞여 헤더를 못 만들어 CI E2E가 전부 실패한 적이 있다
+  const apiKey = process.env.AI_GATEWAY_API_KEY?.trim();
   if (!apiKey) throw aiErrors.unavailable();
+  // 가운데에 줄바꿈·공백이 남아 있으면(두 줄로 저장된 Secret 등) 헤더를 만들 수 없다. 키 설정 문제로 알린다
+  if (/\s/.test(apiKey)) {
+    console.error("[ai] AI_GATEWAY_API_KEY 안에 줄바꿈이나 공백이 있어요. 키를 한 줄로 다시 저장해 주세요");
+    throw aiErrors.unavailable();
+  }
 
   let res: Response;
   try {
