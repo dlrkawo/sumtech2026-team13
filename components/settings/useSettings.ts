@@ -36,6 +36,16 @@ export function useSettings(enabled: boolean) {
     };
   }, [enabled]);
 
+  // 로그아웃·세션 만료로 enabled가 꺼지면 이전 사람의 설정이 남지 않게 비운다
+  useEffect(() => {
+    if (!enabled) return;
+    return () => {
+      confirmed.current = null;
+      setSettings(null);
+      setError(null);
+    };
+  }, [enabled]);
+
   // 스위치를 누르면 바로 바뀐 것처럼 보이고, 저장에 실패하면 되돌리고 error를 채운다
   // (스위치는 먼저 바꿔 둔다. E2E의 switch.uncheck()는 누른 직후 상태가 바뀌어야 통과한다)
   const update = useCallback((patch: SettingsUpdateRequest) => {
