@@ -122,7 +122,7 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
       let image: string;
       if (source === "share") {
         try {
-          image = share.captureFrame();
+          image = await share.captureFrame();
         } catch (e) {
           return setNotice({ kind: "error", error: toUserError(e) });
         }
