@@ -27,10 +27,16 @@ const RISK_KEYWORDS: [RegExp, RiskType][] = [
 const MONEY_QUESTION = /송금|이체|계좌|[0-9일이삼사오육칠팔구십백천만]+\s*원|돈/;
 const SEND_BUTTON = /보내기|보낼게요|보내요/;
 
-export function buildGuidePrompt(question: string, width: number, height: number, previousInstruction?: string): string {
-  const previous = previousInstruction
-    ? `\n바로 전에 사용자에게 준 안내: ${previousInstruction}\n사용자는 그 안내를 따른 뒤 이 화면을 보고 있다. 같은 안내를 반복하지 말고 이 화면에서의 다음 단계를 골라라.`
-    : "";
+// previousInstructions: 지금까지 준 안내 (오래된 순, 마지막이 바로 전 안내). 한 줄이면 예전과 같은 문장을 쓴다
+export function buildGuidePrompt(question: string, width: number, height: number, previousInstructions: string[] = []): string {
+  const last = previousInstructions.at(-1);
+  const previous =
+    previousInstructions.length > 1
+      ? `\n지금까지 사용자에게 준 안내(오래된 순):\n${previousInstructions.map((text, i) => `${i + 1}. ${text}`).join("\n")}\n` +
+        "사용자는 마지막 안내를 따른 뒤 이 화면을 보고 있다. 이미 준 안내를 반복하지 말고, 지금까지의 흐름을 이어 이 화면에서의 다음 단계를 골라라."
+      : last
+        ? `\n바로 전에 사용자에게 준 안내: ${last}\n사용자는 그 안내를 따른 뒤 이 화면을 보고 있다. 같은 안내를 반복하지 말고 이 화면에서의 다음 단계를 골라라.`
+        : "";
 
   return `이 이미지는 사용자가 보고 있는 화면 캡처이고 크기는 ${width}x${height} 픽셀이다.
 사용자는 디지털 기기에 익숙하지 않은 어르신이다. 사용자가 하고 싶은 일: ${question}${previous}

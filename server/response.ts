@@ -3,11 +3,12 @@ import "server-only";
 import { z } from "zod";
 
 import { DbUnavailableError } from "./db/client";
-import { AppError, errors } from "./errors";
+import { AppError, errors, isRetryableStatus } from "./errors";
 
 // 공통 응답 형식 (API_CONVENTION 3번)
 //   성공: { success: true, data, message }
-//   실패: { success: false, data: null, message, code }
+//   실패: { success: false, data: null, message, code, retryable }
+//   retryable: 같은 요청을 다시 보내면 될 수 있는지 (FE의 '다시 시도' 버튼 기준)
 
 export function ok<T>(data: T, init?: { status?: number; headers?: HeadersInit }): Response {
   if (init?.status === 204) return new Response(null, { status: 204, headers: init.headers });
@@ -17,8 +18,8 @@ export function ok<T>(data: T, init?: { status?: number; headers?: HeadersInit }
   );
 }
 
-export function fail(status: number, code: string, message: string): Response {
-  return Response.json({ success: false, data: null, message, code }, { status });
+export function fail(status: number, code: string, message: string, retryable = isRetryableStatus(status)): Response {
+  return Response.json({ success: false, data: null, message, code, retryable }, { status });
 }
 
 // 모든 route handler를 감싼다. 던진 에러를 공통 실패 응답으로 바꾸고, 예상 못 한 오류는 로그에만 남긴다.
@@ -31,7 +32,7 @@ export function withHandler<C = { params: Promise<Record<string, string | string
     try {
       return await handler(req, ctx);
     } catch (e) {
-      if (e instanceof AppError) return fail(e.status, e.code, e.message);
+      if (e instanceof AppError) return fail(e.status, e.code, e.message, e.retryable);
       if (e instanceof z.ZodError) return fail(400, "VALIDATION_ERROR", firstIssueMessage(e));
       if (e instanceof DbUnavailableError) {
         return fail(503, "DB_UNAVAILABLE", "지금은 저장 기능을 쓸 수 없어요. 잠시 후 다시 시도해 주세요.");

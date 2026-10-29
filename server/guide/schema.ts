@@ -12,11 +12,21 @@ export const IMAGE_DATA_URL_PATTERN = /^data:image\/(jpeg|png|webp);base64,[A-Za
 // AI 안내 문장은 길이 제한이 없어서, 300자를 넘어도 '눌렀어요, 다음 알려 주세요'가 막히지 않게 오류 대신 앞 300자만 쓴다.
 // 2000자를 넘는 비정상 요청만 400 (화면에 그대로 보이므로 영어 기본 문구 대신 한국어 문구)
 export const MAX_PREVIOUS_INSTRUCTION_LENGTH = 300;
-export const previousInstructionSchema = z
+const instructionTextSchema = z
   .string({ error: "바로 전 안내를 다시 확인해 주세요." })
   .trim()
   .max(2000, "바로 전 안내가 너무 길어요. 새로 물어봐 주세요.")
-  .transform((s) => s.slice(0, MAX_PREVIOUS_INSTRUCTION_LENGTH))
+  .transform((s) => s.slice(0, MAX_PREVIOUS_INSTRUCTION_LENGTH));
+export const previousInstructionSchema = instructionTextSchema.optional();
+
+// 지금까지 받은 안내 문장들 (선택, 오래된 순). 바로 전 한 줄만으로는 여러 단계짜리 일에서 AI가 앞 단계를 모르므로
+// 이어 묻기 동안 받은 안내를 순서대로 보낸다. 최근 5개만 AI에 넘긴다 (비용·프롬프트 길이)
+// previousInstruction(한 줄)도 계속 받는다. 둘 다 오면 이 목록을 쓴다
+export const MAX_PREVIOUS_INSTRUCTIONS = 5;
+export const previousInstructionsSchema = z
+  .array(instructionTextSchema, { error: "지난 안내 목록을 다시 확인해 주세요." })
+  .max(50, "지난 안내가 너무 많아요. 새로 물어봐 주세요.")
+  .transform((list) => list.filter((text) => text.length > 0).slice(-MAX_PREVIOUS_INSTRUCTIONS))
   .optional();
 
 // image는 문자열인지만 여기서 보고, 형식·크기는 service에서 IMAGE_INVALID / IMAGE_TOO_LARGE로 구분해 알린다
@@ -30,6 +40,7 @@ export const guideRequestSchema = z.object(
       .min(1, "하고 싶은 일을 적어 주세요.")
       .max(200, "200자 안으로 적어 주세요."),
     previousInstruction: previousInstructionSchema,
+    previousInstructions: previousInstructionsSchema,
   },
   // 본문이 객체가 아닐 때(null·배열 등)도 영어 기본 문구 대신 쓴다
   { error: "요청 형식이 올바르지 않아요." },

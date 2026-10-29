@@ -49,10 +49,11 @@
 
 실패:
 ```json
-{ "success": false, "data": null, "message": "로그인이 필요해요.", "code": "AUTH_REQUIRED" }
+{ "success": false, "data": null, "message": "로그인이 필요해요.", "code": "AUTH_REQUIRED", "retryable": false }
 ```
 
 - FE는 실제 데이터를 항상 응답 본문의 `data`에서 꺼냅니다.
+- 실패 응답의 `retryable`은 **같은 요청을 다시 보내면 될 수 있는지**입니다. 429·5xx(AI·DB·서버 일시 오류)는 `true`, 나머지 4xx(입력·사진 형식·로그인)는 `false`. FE의 '다시 시도' 버튼은 상태 코드를 추측하지 말고 이 값을 보면 됩니다 (`server/errors.ts`의 `isRetryableStatus`, `AppError`에서 따로 지정 가능)
 - 본문 없는 성공(204: 로그아웃, 도움 기록 전체 삭제)은 본문이 없습니다.
 - 예외: `GET /__health`는 공통 형식이 아니라 `{ "releaseId": "..." }`만 응답합니다 (키트 형식).
 
@@ -134,8 +135,8 @@
 | 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 첫 화면 로그인 확인 | 구현 |
 | 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | 설정 창 | 구현 |
 | 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` (바뀐 전체) | 필요 | 이감재 | S6 ('기록 저장' 끄기) | 구현 |
-| 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S2~S6 | 구현 |
-| 목소리로 묻기 | POST | `/api/voice-guides` | `VoiceGuideRequest` `{ image, audio, previousInstruction? }` | `VoiceGuideResponse` `{ question, instruction, target, risk, status }` | 필요 | hyuckkim | - (FE 미연결) | 구현 |
+| 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction?, previousInstructions? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S2~S6 | 구현 |
+| 목소리로 묻기 | POST | `/api/voice-guides` | `VoiceGuideRequest` `{ image, audio, previousInstruction?, previousInstructions? }` | `VoiceGuideResponse` `{ question, instruction, target, risk, status }` | 필요 | hyuckkim | - (FE 미연결) | 구현 |
 | 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` `{ id, question, instruction, createdAt }` (최신순, 최대 50개) | 필요 | 이감재 | S5, S6 | 구현 |
 | 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 도움 기록 창 | 구현 |
 
@@ -148,6 +149,7 @@
 ### 10-1. `POST /api/guides` 동작
 
 - `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 같은 일의 **다음 단계**를 이어서 판단한다
+- `previousInstructions`(선택, 문자열 배열)는 **이 일에서 지금까지 받은 안내 문장들(오래된 순, 마지막이 바로 전 안내)**. 최근 5개를 AI에 순서대로 넘겨서, 여러 단계짜리 일에서도 앞 단계를 알고 다음 단계를 고른다. 각 줄은 `previousInstruction`과 같은 규칙(300자로 자름, 2000자 초과는 400), 빈 줄은 버림, 50개 초과는 400. **둘 다 오면 `previousInstructions`를 쓴다** (한 줄만 보내는 예전 요청도 그대로 동작)
   - FE가 보내는 경우: '눌렀어요, 다음 알려 주세요'를 눌렀을 때, 그리고 바로 전과 **같은 질문**으로 다시 '물어보기'했을 때(예: '사진 바꾸기' 뒤 같은 질문). 바로 전 안내가 `IN_PROGRESS`일 때만 보내고, 이때 'N단계'가 하나 올라간다 (`components/helper/useHelperSession.ts`)
 - AI 모델 `anthropic/claude-sonnet-5.5`(`server/guide/service.ts`), 한 번 25초 제한, 답 형식이 깨지면 한 번만 다시 묻고 답이 잘리면 바로 `AI_FAILED`
 - 기록 저장 설정이 켜져 있으면 **질문과 안내 문장만** 도움 기록에 남긴다 (화면 이미지는 저장하지 않음). 저장 시점에 DB의 최신 설정을 읽는다

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { previousInstructionSchema, type GuideResponse } from "../guide/schema";
+import { previousInstructionSchema, previousInstructionsSchema, type GuideResponse } from "../guide/schema";
 
 // 목소리로 묻기 (POST /api/voice-guides) — 담당: hyuckkim
 // 화면 이미지 + 녹음한 목소리 → 목소리를 글자로 바꿔 질문으로 삼고, POST /api/guides와 같은 안내를 돌려준다.
@@ -21,6 +21,8 @@ export const voiceGuideRequestSchema = z.object(
     audio: z.string({ error: "목소리 녹음이 필요해요." }).min(1, "목소리 녹음이 필요해요."),
     // 선택. 바로 전에 받은 안내 문장 (POST /api/guides와 같음: 300자를 넘으면 앞 300자만 사용)
     previousInstruction: previousInstructionSchema,
+    // 선택. 지금까지 받은 안내 문장들 (POST /api/guides와 같음)
+    previousInstructions: previousInstructionsSchema,
   },
   // 본문이 객체가 아닐 때(null·배열 등)도 영어 기본 문구 대신 쓴다
   { error: "요청 형식이 올바르지 않아요." },
