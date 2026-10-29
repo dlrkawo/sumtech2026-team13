@@ -65,10 +65,18 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
       if (!question || guide.isLoading) return;
       setBubbleOpen(true);
       if (!isOn) return setNotice({ kind: "needStart" });
-      // 공유 중인 화면을 찍는 기능은 components/capture(useScreenShare)에 아직 없어서, 지금은 올린 사진으로 묻는다
-      if (!photo) {
-        const reason = share.isSharing ? "보고 있는 화면을 바로 보내는 기능은 아직 준비 중이에요." : share.error?.message;
-        return setNotice({ kind: "needScreen", reason });
+      // 공유 중이면 지금 장면을 찍어 보내고, 아니면 올린 사진으로 묻는다
+      let image: string;
+      if (share.isSharing) {
+        try {
+          image = share.captureFrame();
+        } catch (e) {
+          return setNotice({ kind: "error", error: toUserError(e) });
+        }
+      } else if (photo) {
+        image = photo;
+      } else {
+        return setNotice({ kind: "needScreen", reason: share.error?.message });
       }
 
       // 같은 일을 이어서 물으면 바로 전 안내를 같이 보내 다음 단계를 받는다 (API_CONVENTION.md 10번)
@@ -78,10 +86,10 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
 
       setLastQuestion(question);
       setNotice(null);
-      setShownImage(photo);
-      await guide.ask({ image: photo, question, ...(previousInstruction ? { previousInstruction } : {}) });
+      setShownImage(image);
+      await guide.ask({ image, question, ...(previousInstruction ? { previousInstruction } : {}) });
     },
-    [guide, isOn, share.isSharing, share.error, photo, lastQuestion],
+    [guide, isOn, share, photo, lastQuestion],
   );
 
   const next = useCallback(() => {
