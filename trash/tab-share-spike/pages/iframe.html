@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>iframe 실험</title>
+    <script src="/html2canvas.min.js"></script>
+    <style>
+      iframe { width: 800px; height: 500px; border: 1px solid #ccc; display: block; }
+    </style>
+  </head>
+  <body>
+    <button id="current-tab">현재 탭 공유</button>
+    <button id="dom-capture">iframe 캡처</button>
+    <pre id="result">대기 중</pre>
+    <!-- 같은 출처 대상 페이지 -->
+    <iframe id="target" src="/target.html"></iframe>
+    <!-- iframe 안에서 화면 공유 호출 (display-capture 허용) -->
+    <iframe id="inner-share" src="/share.html" allow="display-capture"></iframe>
+    <!-- 외부 사이트 (주소는 테스트에서 넣음) -->
+    <iframe id="external"></iframe>
+    <script>
+      const result = document.getElementById('result');
+      const show = (obj) => (result.textContent = JSON.stringify(obj));
+
+      // 1/4 지점 픽셀이 빨간 상자인지 확인한다
+      const samplePixel = (canvas) =>
+        Array.from(
+          canvas.getContext('2d').getImageData(Math.floor(canvas.width / 4), Math.floor(canvas.height / 4), 1, 1).data.slice(0, 3)
+        );
+
+      // 이 탭(iframe 포함)을 공유하도록 요청
+      document.getElementById('current-tab').addEventListener('click', async () => {
+        result.textContent = '요청 중';
+        try {
+          const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, preferCurrentTab: true });
+          const track = stream.getVideoTracks()[0];
+          show({ status: 'SHARED', label: track.label, displaySurface: track.getSettings().displaySurface });
+          track.stop();
+        } catch (e) {
+          show({ status: 'FAILED', name: e.name, message: e.message });
+        }
+      });
+
+      // 화면 공유 없이 같은 출처 iframe의 DOM을 그림으로 그린다
+      document.getElementById('dom-capture').addEventListener('click', async () => {
+        result.textContent = '요청 중';
+        try {
+          const doc = document.getElementById('target').contentDocument;
+          const canvas = await html2canvas(doc.body, { windowWidth: 800, windowHeight: 500 });
+          show({ status: 'CAPTURED', width: canvas.width, height: canvas.height, pixel: samplePixel(canvas) });
+        } catch (e) {
+          show({ status: 'FAILED', name: e.name, message: e.message });
+        }
+      });
+    </script>
+  </body>
+</html>

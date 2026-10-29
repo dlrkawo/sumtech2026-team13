@@ -1,0 +1,11 @@
+{
+  "name": "tab-share-spike",
+  "private": true,
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "html2canvas": "^1.4.1"
+  }
+}
