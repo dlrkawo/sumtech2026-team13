@@ -22,7 +22,10 @@ export function toUserError(e: unknown): UserError {
 
   if (e instanceof ApiError) {
     if (e.status === 0) return { code: e.code, message: e.message, canRetry: true, needsLogin: false };
-    if (e.status === 401) return { code: e.code, message: e.message, canRetry: false, needsLogin: true };
+    // 로그인 화면으로 보내는 건 "로그인이 필요해요"일 때만. 비밀번호가 틀린 401(AUTH_INVALID_CREDENTIALS)은 문구만 보여 준다
+    if (e.status === 401) {
+      return { code: e.code, message: e.message, canRetry: false, needsLogin: e.code === "AUTH_REQUIRED" };
+    }
     // AI 사용량 초과·일시 불가는 BE 문장 + 다시 시도
     if (e.status === 429 || e.status === 503 || e.code.startsWith("AI_")) {
       return { code: e.code, message: e.message, canRetry: true, needsLogin: false };
