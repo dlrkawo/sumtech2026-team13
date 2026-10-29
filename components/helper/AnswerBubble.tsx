@@ -1,7 +1,7 @@
 import type { GuideResponse, GuideStatus } from "@/server/guide/schema";
 
 import { BubbleNotice } from "./BubbleNotice";
-import { ScreenPreview } from "./ScreenPreview";
+import { canZoom, ScreenPreview, TargetZoom } from "./ScreenPreview";
 import { BUTTON_SECONDARY, FOCUS_RING } from "./styles";
 import type { HelperNotice, ScreenSource } from "./useHelperSession";
 
@@ -61,7 +61,8 @@ export function AnswerBubble({
   const isRisk = !isLoading && guide?.risk != null;
   const showGuide = !isLoading && !error && guide !== null;
   // 누를 곳을 찾지 못하면(target 없음) '누를 곳을 찾았어요' 없이 안내 문장만 보인다 (problem.yaml design_decision 한계)
-  const showStatusLabel = guide !== null && !(guide.status === "IN_PROGRESS" && guide.target === null);
+  const showZoom = guide?.target != null && canZoom(guide.target);
+  const showStatusLabel =guide !== null && !(guide.status === "IN_PROGRESS" && guide.target === null);
 
   return (
     <section
@@ -121,12 +122,13 @@ export function AnswerBubble({
           </div>
         )}
 
-        {/* 넓은 화면(xl, 1280px 이상)에서는 위험 경고를 맨 위에, 그 아래 왼쪽에 안내·버튼, 오른쪽에 화면 사진을 크게 둔다.
+        {/* 넓은 화면(xl, 1280px 이상)에서는 위험 경고를 맨 위에, 그 아래 왼쪽에 안내·오른쪽에 버튼,
+            맨 아래 왼쪽에 누를 곳 크게 보기·오른쪽에 화면 사진을 둔다 (누를 곳이 없으면 사진만 가운데).
+            세로로 쌓으면 1280×720에서 '눌렀어요' 버튼이나 사진이 말풍선 아래로 밀려 가로로 나눴다.
             좁은 화면·PiP 작은 창에서는 지금처럼 세로로 쌓는다 */}
         {showGuide && (
           <div
-            // 세로가 짧은 화면(1280×720 등)에서는 사진이 낮게 그려져 폭이 남으므로 글 칸을 넓혀 안내 줄 수를 줄인다 (위험 경고+긴 안내에서 아래 줄이 잘렸다)
-            className={`flex flex-col gap-[10px] ${image ? "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] xl:[@media(max-height:800px)]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-rows-[auto_auto_1fr] xl:gap-x-[24px] xl:[grid-template-areas:'risk_risk'_'text_img'_'act_img']" : ""}`}
+            className={`flex flex-col gap-[10px] ${image ? `xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-rows-[auto_auto_1fr] xl:gap-x-[24px] ${showZoom ? "xl:[grid-template-areas:'risk_risk'_'text_act'_'zoom_img']" : "xl:[grid-template-areas:'risk_risk'_'text_act'_'img_img']"}` : ""}`}
           >
             {guide.risk && (
               <p
@@ -146,12 +148,17 @@ export function AnswerBubble({
                 {guide.instruction}
               </p>
             </div>
+            {image && showZoom && guide.target && (
+              <div className="xl:[grid-area:zoom]">
+                <TargetZoom image={image} target={guide.target} hasRisk={isRisk} />
+              </div>
+            )}
             {image && (
               <div className="xl:[grid-area:img]">
                 <ScreenPreview image={image} target={guide.target} hasRisk={isRisk} />
               </div>
             )}
-            <div className="flex flex-col gap-[10px] xl:[grid-area:act]">
+            <div className="flex flex-col gap-[10px] xl:self-start xl:[grid-area:act]">
               {guide.status === "IN_PROGRESS" && (
                 <button type="button" className={BUTTON_SECONDARY} onClick={onNext}>
                   눌렀어요, 다음 알려 주세요
