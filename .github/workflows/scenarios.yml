@@ -12,7 +12,6 @@ on:
     # 앱·E2E에 영향이 없는 문서·실험 폴더만 바뀐 머지는 검사하지 않는다 (새 폴더가 생겨도 빠뜨리지 않게 제외 목록으로 둠)
     paths-ignore:
       - "docs/**"
-      - "trash/**"
       - "**/*.md"
       - "progress.md"
       - "scripts/check_docs.py"
