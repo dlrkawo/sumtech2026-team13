@@ -43,7 +43,7 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 - [ ] 사용자 핵심 흐름 3~8개를 scenarios.example.yaml 참고해 docs/scenarios.yaml에 작성(steps는 화면의 메뉴·버튼 이름으로 한 줄에 한 동작, 로그인 흐름은 account 지정), YAML 파서로 형식 확인 후 기본 브랜치 push
 - [ ] 서비스의 AI 호출 필요 여부 확인
 - [ ] README 등 기존 문서에 확인된 구현 설계 기록, 기본 브랜치 push
-- 문제정의·구현 설계 링크 / commit SHA / 확인할 빈칸: https://github.com/dlrkawo/sumtech2026-team13/blob/main/docs/problem.yaml / 빈칸(학생 답 대기): statement, experiences(실제 겪은 장면), sources(노인실태조사 67.2% 원문 주소), solution_paths·why_ours(2-B), features(2-C). 종이 사진과 학생 정리본을 합쳐 옮김(대안은 네 가지로 분리)
+- 문제정의·구현 설계 링크 / commit SHA / 확인할 빈칸: https://github.com/dlrkawo/sumtech2026-team13/blob/main/docs/problem.yaml / 빈칸(학생 답 대기): statement, experiences(실제 겪은 장면), sources(외부 근거 자료. 학생이 통찰에서 노인실태조사 수치를 뺌), solution_paths·why_ours(2-B), features(2-C). 종이 사진과 학생 정리본을 합쳐 옮김(대안은 네 가지로 분리)
 
 ## 3. 최소 화면 docker 실행·CI·첫 배포
 
