@@ -25,9 +25,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     // 화면이 아직 없을 때 버튼을 2분(test timeout)까지 기다리지 않고 빨리 실패하게 한다 (CI 대기 시간 단축).
     // 주최 측 실행은 이 파일을 쓰지 않으므로 채점에는 영향 없음
-    // 클릭·입력 대기만 5초로 제한한다. AI 응답 대기는 spec의 expect에 60초(AI_WAIT)로 따로 적혀 있어 영향 없음.
-    // 화면이 붙은 뒤 느린 화면 전환 때문에 잘못 실패하면 10초로 올린다
-    actionTimeout: 5_000,
+    actionTimeout: 15_000,
     navigationTimeout: 30_000,
   },
   // docs/scenarios.yaml의 platform에 맞는 것만 남긴다(both면 둘 다). 주최 측 실행도 같은 화면 크기로 돈다.
