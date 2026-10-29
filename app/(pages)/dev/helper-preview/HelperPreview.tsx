@@ -1,0 +1,43 @@
+"use client";
+
+import { useState } from "react";
+
+import { MOCK_GUIDE_EXAMPLES } from "@/components/guide/mock";
+import { IconMode, Landing } from "@/components/helper";
+
+// 가짜 값은 여기서만 만들고 IconMode에는 props로 넘긴다 (컴포넌트 안에는 가짜 데이터를 두지 않는다)
+export function HelperPreview({ mock, image }: { mock: string; image: string }) {
+  const [isBubbleOpen, setBubbleOpen] = useState(true);
+  const [question, setQuestion] = useState("친구에게 만원 보내고 싶어");
+  const guide = MOCK_GUIDE_EXAMPLES[mock] ?? null;
+  const noop = () => {};
+
+  return (
+    <>
+      <Landing />
+      <IconMode
+        isOn
+        hasScreen
+        hasPhoto
+        isAnswering={mock === "loading"}
+        guide={guide}
+        guideImage={image}
+        error={null}
+        notice={null}
+        showEdge={false}
+        isBubbleOpen={isBubbleOpen}
+        question={question}
+        voice={{ status: "idle", onToggle: noop }}
+        onStart={noop}
+        onStop={noop}
+        onAsk={noop}
+        onNext={noop}
+        onRetry={noop}
+        onQuestionChange={setQuestion}
+        onPickPhoto={noop}
+        onToggleBubble={setBubbleOpen}
+        onOpenSettings={noop}
+      />
+    </>
+  );
+}

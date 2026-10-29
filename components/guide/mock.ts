@@ -37,6 +37,9 @@ const ERRORS: Record<string, ApiError> = {
 };
 
 const SEQUENCE = [STEP1, STEP2, RESPONSES.done];
+
+// 화면 확인용 예시 응답 (app/(pages)/dev/helper-preview에서 컴포넌트에 props로 넘긴다)
+export const MOCK_GUIDE_EXAMPLES: Record<string, GuideResponse> = { step1: STEP1, step2: STEP2, ...RESPONSES };
 let sequenceIndex = 0;
 
 function mockName(): string | null {
