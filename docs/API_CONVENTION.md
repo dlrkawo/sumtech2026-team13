@@ -24,9 +24,21 @@
 
 ## 2. 요청/응답 기본
 
-- 본문은 JSON. 화면 이미지 업로드만 `multipart/form-data`
+- 본문은 **모두 JSON** (`Content-Type: application/json`). 화면 이미지도 JSON 안에 base64로 보냄 (아래 「화면 이미지 보내기」)
 - JSON 필드와 쿼리 파라미터는 camelCase (예: `sessionId`, `?sortBy=createdAt`)
 - FE에서 쓸 요청·응답 타입은 BE가 `server/<domain>/schema.ts`에 zod로 정의하고 `export type`으로 내보냄 → FE는 `import type`으로 가져와 사용 (타입만 가져오므로 서버 코드가 브라우저로 섞이지 않음)
+
+### 화면 이미지 보내기 (base64 JSON, 팀 결정 10.29)
+
+```json
+{ "image": "data:image/jpeg;base64,/9j/4AAQ...", "question": "예약하기 버튼은 어디에 있어요?" }
+```
+
+- 필드 `image`: **data URL 문자열** (`data:image/jpeg;base64,...`). FE는 캔버스의 `toDataURL("image/jpeg", 0.7)` 결과를 그대로 넣음
+- 화면 공유 캡처와 "화면 사진 올리기"(파일 선택, E2E용) 모두 **캔버스로 다시 그려서 같은 형식**으로 보냄
+- FE는 보내기 전에 **가로 최대 1280px, JPEG 품질 0.7**로 줄임 (원본 전송 금지)
+- 허용 형식: JPEG, PNG, WEBP / BE는 data URL 형식과 크기를 zod로 검사하고, 문자열 기준 **4MB 초과면 400 `IMAGE_TOO_LARGE`**, 형식이 틀리면 400 `IMAGE_INVALID`
+- 이유: AI 이미지 입력이 base64를 받으므로 BE가 변환할 필요가 없고, 다른 API처럼 JSON 하나로 zod 검증 가능. 1280px·JPEG 0.7이면 수백 KB 수준
 
 ## 3. 공통 응답 형식
 

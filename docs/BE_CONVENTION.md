@@ -151,5 +151,7 @@ route.ts → service → repository → Prisma
 |---|---|---|
 | `VALIDATION_ERROR` | 400 | 요청 값 검증 실패 |
 | `AUTH_REQUIRED` | 401 | 로그인 필요 |
+| `IMAGE_INVALID` | 400 | 화면 이미지가 data URL(JPEG/PNG/WEBP base64) 형식이 아님 |
+| `IMAGE_TOO_LARGE` | 400 | 화면 이미지 문자열이 4MB 초과 |
 | `INTERNAL_SERVER_ERROR` | 500 | 알 수 없는 서버 오류 |
 | (추가 시 여기에 기록) | | |
