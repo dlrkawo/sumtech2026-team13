@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useScreenShare } from "@/components/capture";
 import { useGuideRequest } from "@/components/guide";
@@ -41,6 +41,16 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   const source: ScreenSource | null =
     share.isSharing && (prefersShare || !photo) ? "share" : photo ? "photo" : null;
 
+  // 실패한 뒤 물어볼 화면이 바뀌면(▶로 공유 시작·사진에서 공유로 전환·공유 끊김) 이전 오류와 '다시 시도'를 지운다.
+  // 같은 출처에서 사진만 바꾼 경우는 pickPhoto에서 지운다
+  const { clearError } = guide;
+  const prevSource = useRef(source);
+  useEffect(() => {
+    if (prevSource.current === source) return;
+    prevSource.current = source;
+    clearError();
+  }, [source, clearError]);
+
   // ▶: 도움을 켜고 화면 공유를 요청한다. 공유가 안 돼도 켜진 상태로 두고 사진 올리기로 이어 간다
   // 이미 공유 중이면(사진으로 묻다가 다시 누름) 공유 화면으로 돌아오기만 한다
   const play = useCallback(async () => {
@@ -64,17 +74,22 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     setPrefersShare(true);
   }, [share, guide]);
 
-  const pickPhoto = useCallback(async (file: File) => {
-    setBubbleOpen(true);
-    try {
-      setPhoto(await fileToDataUrl(file));
-      setPrefersShare(false);
-      setIsOn(true);
-      setNotice(null);
-    } catch (e) {
-      setNotice({ kind: "error", error: toUserError(e) });
-    }
-  }, []);
+  const pickPhoto = useCallback(
+    async (file: File) => {
+      setBubbleOpen(true);
+      try {
+        setPhoto(await fileToDataUrl(file));
+        setPrefersShare(false);
+        setIsOn(true);
+        setNotice(null);
+        // 새 사진을 골랐으니 바꾸기 전 사진으로 실패한 요청의 '다시 시도'는 지운다
+        clearError();
+      } catch (e) {
+        setNotice({ kind: "error", error: toUserError(e) });
+      }
+    },
+    [clearError],
+  );
 
   // 실제 분석 요청 한 번. image는 호출하는 쪽에서 이미 정해 온다 (공유 캡처 / 올린 사진 / 다음 화면 사진)
   const runGuide = useCallback(

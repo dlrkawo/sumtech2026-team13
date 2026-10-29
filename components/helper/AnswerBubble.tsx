@@ -168,9 +168,13 @@ export function AnswerBubble({
               {error.message}
             </p>
             {error.canRetry && (
-              <button type="button" className={BUTTON_SECONDARY} onClick={onRetry}>
-                다시 시도
-              </button>
+              <>
+                {/* '다시 시도'는 방금 실패한 요청(그때의 화면·질문)을 그대로 보낸다. 화면을 바꾸면 이 버튼은 사라진다 */}
+                <p className="text-[20px] text-[#454B53]">방금 실패한 요청을 다시 보내요.</p>
+                <button type="button" className={BUTTON_SECONDARY} onClick={onRetry}>
+                  다시 시도
+                </button>
+              </>
             )}
           </>
         )}

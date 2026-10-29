@@ -45,6 +45,12 @@ export function useGuideRequest() {
     if (lastRequest.current) return ask(lastRequest.current);
   }, [ask]);
 
+  // 실패한 뒤 물어볼 화면이 바뀌면 오류와 '다시 시도'를 지운다 ('다시 시도'는 바뀌기 전 화면을 그대로 보내므로).
+  // 실패 상태일 때만 지우고, 받은 안내(success)나 답변 중(loading)은 그대로 둔다
+  const clearError = useCallback(() => {
+    setState((prev) => (prev.status === "error" ? { status: "idle" } : prev));
+  }, []);
+
   const reset = useCallback(() => {
     latestId.current += 1;
     inFlight.current = false;
@@ -52,5 +58,5 @@ export function useGuideRequest() {
     setState({ status: "idle" });
   }, []);
 
-  return { state, ask, retry, reset, isLoading: state.status === "loading" };
+  return { state, ask, retry, clearError, reset, isLoading: state.status === "loading" };
 }
