@@ -33,6 +33,10 @@ export function useSettings(enabled: boolean) {
       });
     return () => {
       ignore = true;
+      // 로그아웃하면 비운다. 다른 계정으로 로그인했을 때 불러오기 전까지 이전 계정의 스위치가 보이지 않게
+      confirmed.current = null;
+      setSettings(null);
+      setError(null);
     };
   }, [enabled]);
 

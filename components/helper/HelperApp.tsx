@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useAuth } from "@/components/auth";
@@ -8,6 +8,7 @@ import { useHistory } from "@/components/history";
 import { usePipWindow } from "@/components/pip";
 import { useSettings } from "@/components/settings";
 import { useSpeechInput } from "@/components/voice";
+import { MAX_QUESTION_LENGTH } from "@/lib/constants";
 
 import { AuthWindow } from "./AuthWindow";
 import { HistoryWindow } from "./HistoryWindow";
@@ -30,17 +31,20 @@ export function HelperApp() {
   const history = useHistory(signedIn && view === "history");
   const [question, setQuestion] = useState("");
 
+  // 로그인이 풀렸을 때(401 AUTH_REQUIRED)도 로그아웃과 같이 정리한다. 정리 함수는 세션·PiP를 만든 뒤에 채운다
+  const clearForSignOutRef = useRef(() => {});
   const onNeedLogin = useCallback(() => {
-    setView("settings");
+    clearForSignOutRef.current();
     auth.markSignedOut();
   }, [auth]);
   // 설정 창을 오가도 화면 공유·안내가 이어지도록 여기서 한 번만 만든다
   const session = useHelperSession({ onNeedLogin });
 
-  // 말로 들은 문장은 입력창에 적고 바로 물어본다 (S8)
+  // 말로 들은 문장은 입력창에 적고 바로 물어본다 (S8). 말로는 줄일 수 없으니 질문 한도(200자)에 맞춰 자른다
   const { ask } = session;
   const onHeard = useCallback(
-    (text: string) => {
+    (heard: string) => {
+      const text = heard.slice(0, MAX_QUESTION_LENGTH);
       setQuestion(text);
       void ask(text);
     },
@@ -49,6 +53,24 @@ export function HelperApp() {
   const voice = useSpeechInput(onHeard);
   // 로그인 뒤 화면을 PiP 작은 창으로 옮겨 다른 탭 위에 띄운다 (PiP 미지원 브라우저·E2E에서는 본 화면 그대로)
   const pip = usePipWindow();
+
+  // 로그아웃·로그인 만료 공통: 작은 창을 닫고 이전 사용자의 화면·안내·질문을 지운다 (공용 PC, F8)
+  const clearForSignOut = useCallback(() => {
+    pip.close();
+    session.stop();
+    setQuestion("");
+    setView("settings");
+  }, [pip, session]);
+  useEffect(() => {
+    clearForSignOutRef.current = clearForSignOut;
+  }, [clearForSignOut]);
+
+  // 설정·기록을 불러오다 로그인이 풀린 경우도 로그인 창으로 돌린다
+  const settingsNeedLogin = settingsError?.needsLogin ?? false;
+  const historyNeedLogin = history.error?.needsLogin ?? false;
+  useEffect(() => {
+    if (settingsNeedLogin || historyNeedLogin) onNeedLogin();
+  }, [settingsNeedLogin, historyNeedLogin, onNeedLogin]);
 
   if (auth.state.status === "checking") return null;
   if (auth.state.status === "guest") {
@@ -106,9 +128,7 @@ export function HelperApp() {
           onOpenHistory={() => setView("history")}
           onStart={startHelp}
           onLogout={() => {
-            pip.close();
-            session.stop();
-            setView("settings");
+            clearForSignOut();
             void auth.logout();
           }}
         />

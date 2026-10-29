@@ -24,6 +24,9 @@ export function useHistory(enabled: boolean) {
       });
     return () => {
       ignore = true;
+      // 창을 닫으면 비운다. 다시 열 때 지난 목록(또는 이전 계정의 목록)을 보여 주다 바꾸지 않고 불러오는 중부터 보이게
+      setItems(null);
+      setError(null);
     };
   }, [enabled]);
 
