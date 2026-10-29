@@ -4,6 +4,9 @@ import type { GuideTarget } from "@/server/guide/schema";
 // 화면 공유로는 다른 사이트 위에 직접 그릴 수 없어서, 본 화면(말풍선)에 사진과 함께 보여 준다 (FE_CONVENTION.md 10번)
 // 좌표는 이미지 기준 0~1 비율 (API_CONVENTION.md 5번)
 export function ScreenPreview({ image, target }: { image: string; target: GuideTarget | null }) {
+  // 라벨은 박스 안쪽 모서리에 붙이되, 박스가 사진의 오른쪽·아래쪽에 있으면 반대쪽으로 펼쳐 사진 밖(overflow-hidden)으로 잘리지 않게 한다
+  const labelX = target && target.x + target.width / 2 > 0.5 ? "right-[2px]" : "left-[2px]";
+  const labelY = target && target.y + target.height / 2 > 0.5 ? "bottom-[2px]" : "top-[2px]";
   return (
     <div className="relative mx-auto w-fit max-w-full shrink-0 overflow-hidden rounded-[12px] border-2 border-[#C9C6BE] bg-white">
       {/* data URL 사진이라 next/image 최적화 대상이 아니다 */}
@@ -22,10 +25,9 @@ export function ScreenPreview({ image, target }: { image: string; target: GuideT
             height: `${target.height * 100}%`,
           }}
         >
-          {/* 하이라이트 박스 안쪽 위에 둔다. 사진 바로 바깥(overflow-hidden)에 두면 화면 위쪽 근처일 때 가려질 수 있다 */}
           <span
             aria-hidden="true"
-            className="absolute top-[2px] left-[2px] whitespace-nowrap rounded-[6px] bg-[#C8102E] px-[6px] py-[1px] text-[13px] font-bold text-white"
+            className={`absolute ${labelY} ${labelX} whitespace-nowrap rounded-[6px] bg-[#C8102E] px-[8px] py-[2px] text-[20px] font-bold text-white`}
           >
             여기를 누르세요
           </span>

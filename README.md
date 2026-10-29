@@ -7,8 +7,8 @@ SUMTECH 2026 루프톤 13팀 서비스 저장소입니다.
 
 서비스 **곁길**: 디지털이 낯선 부모님이 막힌 화면을 보여 주면(화면 공유 또는 사진) AI가 다음에 누를 곳 한 군데를 화면 위에 짚어 주고, 되돌리기 어려운 버튼 앞에서는 경고합니다.
 
-- 문제정의·기능 명세: `docs/problem.yaml` (기능 F1~F7, 출처 SRC1~SRC6)
-- 사용자 핵심 흐름: `docs/scenarios.yaml` (S1~S6, 각 흐름의 자동 테스트는 `e2e/scenarios/S1~S6.spec.ts`)
+- 문제정의·기능 명세: `docs/problem.yaml` (기능 F1~F8, 출처 SRC1~SRC6)
+- 사용자 핵심 흐름: `docs/scenarios.yaml` (S1~S7, 각 흐름의 자동 테스트는 `e2e/scenarios/S1~S7.spec.ts`)
 - API 목록과 응답 형식: `docs/API_CONVENTION.md` 10번 / 서버 구조: `docs/BE_CONVENTION.md` / 화면 규칙: `docs/FE_CONVENTION.md`
 - 진행 기록: `progress.md`
 

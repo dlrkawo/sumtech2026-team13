@@ -157,7 +157,7 @@ export function HelperApp() {
             작은 창으로 띄우기
           </button>
           {pip.error && (
-            <p role="alert" className="text-[18px] text-[#B42318]">
+            <p role="alert" className="text-[20px] text-[#B42318]">
               {pip.error}
             </p>
           )}

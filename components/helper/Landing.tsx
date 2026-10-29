@@ -11,10 +11,10 @@ export function Landing() {
     >
       <PetChar mood="calm" sign="flag" size={96} />
       <h1 className="text-[30px] font-bold text-[#16191D] sm:text-[36px]">곁길</h1>
-      <p className="max-w-[320px] text-[18px] leading-[1.45] text-[#454B53] sm:text-[20px]">
+      <p className="max-w-[320px] text-[20px] leading-[1.45] text-[#454B53]">
         처음 보는 사이트에서 누를 곳을 하나씩 알려드려요
       </p>
-      <p className="max-w-[320px] text-[16px] leading-[1.45] text-[#454B53] sm:text-[17px]">
+      <p className="max-w-[320px] text-[20px] leading-[1.45] text-[#454B53]">
         지금 보고 있는 화면을 함께 보고, 다음에 눌러야 할 곳을 짚어 드려요. 자녀에게 묻지 않아도 한 단계씩 스스로
         해결할 수 있어요.
       </p>
