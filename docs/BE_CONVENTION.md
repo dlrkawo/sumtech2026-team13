@@ -77,6 +77,7 @@
 - **BE 담당 폴더: `app/api/`, `server/`, `prisma/`, `app/%5F%5Fhealth/`**
 - 공용 파일(`package.json`, `Dockerfile`, `docker-compose.yml`, `next.config.*`, `.env.example`) 수정 시 디스코드에 먼저 알립니다.
 - `server/` 파일 맨 위에 `import "server-only"`를 넣어 FE에서 실수로 가져오지 못하게 합니다.
+  - 예외: `server/*/schema.ts`는 FE가 `import type`으로 타입을 가져가는 파일이라 `server-only`를 넣지 않습니다(DB·키 접근 코드 금지).
 
 ## 4. 레이어 규칙
 
@@ -142,8 +143,8 @@ route.ts → service → repository → Prisma
 
 | 담당자 | 작업 |
 |---|---|
-| BE-1 (이름) | 예: Prisma·시드, 인증, `/__health`, Docker·배포·CI |
-| BE-2 (이름) | 예: AI 화면 분석·안내 API, 안내 기록 |
+| BE-1 이감재 | 공통 코드(`server/response.ts`, `server/errors.ts`), Prisma·DB·시드 계정, Docker·배포·CI, 로그인·설정·도움 기록 API |
+| BE-2 hyuckkim | 화면 분석·안내 API(`POST /api/guides`), AI Gateway 호출(`server/ai/`), 위험 동작 판단 |
 
 ## 12. 에러 코드 목록
 
@@ -153,5 +154,11 @@ route.ts → service → repository → Prisma
 | `AUTH_REQUIRED` | 401 | 로그인 필요 |
 | `IMAGE_INVALID` | 400 | 화면 이미지가 data URL(JPEG/PNG/WEBP base64) 형식이 아님 |
 | `IMAGE_TOO_LARGE` | 400 | 화면 이미지 문자열이 4MB 초과 |
+| `AUTH_INVALID_CREDENTIALS` | 401 | 이메일 또는 비밀번호가 맞지 않음 |
+| `AUTH_EMAIL_TAKEN` | 409 | 이미 가입한 이메일 |
+| `AI_UNAVAILABLE` | 503 | AI 키가 없거나 비활성이라 분석할 수 없음 (앱은 정상 기동) |
+| `AI_TIMEOUT` | 503 | AI 응답 시간 초과 |
+| `AI_FAILED` | 503 | AI 응답 실패 또는 해석 불가 |
+| `AI_BUDGET_EXCEEDED` | 429 | 팀 AI 예산 소진·요청 제한 |
 | `INTERNAL_SERVER_ERROR` | 500 | 알 수 없는 서버 오류 |
 | (추가 시 여기에 기록) | | |
