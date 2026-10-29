@@ -13,6 +13,16 @@ async function logIn(page: Page) {
   await expect(page.getByRole("button", { name: "도움 시작하기" })).toBeVisible()
 }
 
+// 사용자가 실제로 보는 '사진 올리기'·'사진 바꾸기' 버튼을 눌러 파일 선택 창에서 사진을 고른다.
+// 숨은 파일 입력에 직접 넣지 않으므로, 버튼이 화면에 보이지 않으면 여기서 실패한다 (F2)
+async function choosePhoto(page: Page, buttonText: "사진 올리기" | "사진 바꾸기", file: string) {
+  const [chooser] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.getByText(buttonText, { exact: true }).click(),
+  ])
+  await chooser.setFiles(fixture(file))
+}
+
 async function askNext(page: Page) {
   await page.getByRole("button", { name: "눌렀어요, 다음 알려 주세요" }).click()
   await expect(page.getByText("화면을 보고 답을 찾고 있어요")).toBeVisible()
@@ -26,21 +36,21 @@ test("S3 다음 화면으로 이어서 예약 완료까지 안내를 받는다",
 
   await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
 
-  await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-step1.png"))
+  await choosePhoto(page, "사진 올리기", "mock-step1.png")
 
   await page.getByLabel("질문 입력").fill("병원 예약하고 싶어")
 
   await page.getByRole("button", { name: "물어보기" }).click()
   await expect(page.getByText("누를 곳을 찾았어요")).toBeVisible(AI_WAIT)
 
-  await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-step2.png"))
+  await choosePhoto(page, "사진 바꾸기", "mock-step2.png")
 
   await askNext(page)
 
   await expect(page.getByText("누를 곳을 찾았어요")).toBeVisible()
   await expect(page.getByTestId("click-highlight")).toBeVisible()
 
-  await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-done.png"))
+  await choosePhoto(page, "사진 바꾸기", "mock-done.png")
 
   await askNext(page)
 
