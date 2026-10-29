@@ -2,7 +2,7 @@ import "server-only";
 
 import type { GuideResponse, GuideRisk, GuideStatus, GuideTarget } from "./schema";
 
-// 화면 분석 프롬프트와 AI 응답 해석. trash/locate-element.js의 프롬프트를 GuideResponse 형식에 맞게 옮겼다.
+// 화면 분석 프롬프트와 AI 응답 해석. 응답은 GuideResponse 형식(server/guide/schema.ts)으로 바꾼다.
 // AI에게는 원본 픽셀 좌표로 묻고(정확도가 더 높음), 응답할 때 0~1 비율로 바꾼다.
 
 const RISK_TYPES = ["PAYMENT", "TRANSFER", "DELETE", "SUBMIT"] as const;
