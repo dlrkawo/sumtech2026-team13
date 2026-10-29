@@ -22,7 +22,7 @@ test("S7 도우미를 작은 창으로 띄웠다가 원래 화면으로 돌아�
   ])
   await expect(page.getByText("작은 창에서 도와드리고 있어요")).toBeVisible()
 
-  // 말풍선이 처음엔 닫혀 있어 ▶는 '곁길 도우미 열기'를 누른 뒤에 보인다
+  // ▶는 상태 막대에 항상 보이지만, 흐름대로 '곁길 도우미 열기'를 누른 뒤 확인한다
   await pip.getByRole("button", { name: "곁길 도우미 열기" }).click()
 
   await expect(pip.getByRole("button", { name: "▶" })).toBeVisible()
