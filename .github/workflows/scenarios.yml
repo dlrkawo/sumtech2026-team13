@@ -31,28 +31,12 @@ jobs:
       E2E_BASE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v7
-      # docker-compose.yml을 그대로 읽어 같은 이미지를 만들되, 레이어를 GitHub Actions 캐시에 남겨 다음 실행에서 다시 쓴다
-      # (package-lock.json이 그대로면 npm ci 레이어를 건너뜀). compose 파일·Dockerfile은 바꾸지 않는다.
-      - name: Find app image name
-        run: echo "APP_IMAGE=$(docker compose config --images | grep -- '-app$')" >> "$GITHUB_ENV"
-      - uses: docker/setup-buildx-action@v3
-      - name: Build app image (with cache)
-        uses: docker/bake-action@v6
-        env:
-          RELEASE_ID: ${{ github.sha }}
-        with:
-          source: .
-          files: docker-compose.yml
-          targets: app
-          load: true
-          set: |
-            app.tags=${{ env.APP_IMAGE }}
-            app.cache-from=type=gha,scope=scenarios-app
-            app.cache-to=type=gha,scope=scenarios-app,mode=max
+      # Docker 레이어 캐시(buildx + type=gha)는 측정해 보니 이득이 없어 쓰지 않는다 (ci/scenarios-cache PR 참고):
+      # 캐시를 다 맞혀도 레이어 받기·올리기에 빌드 시간(약 33초)만큼 걸리고 buildx 준비 시간이 더 붙는다.
       - name: Start app and database
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
-        run: RELEASE_ID="$GITHUB_SHA" docker compose up -d --no-build
+        run: RELEASE_ID="$GITHUB_SHA" docker compose up -d --build
       - name: Wait for /__health
         run: |
           # 주최 측 실행은 기동을 시작한 때부터 2분을 기다린다. 여기서도 같은 시간 안에 떠야 한다.
