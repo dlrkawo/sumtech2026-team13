@@ -41,7 +41,7 @@ npm run dev
 
 ## 개발·검사
 
-- 검사: `npm run lint`, `npm run typecheck`, `npm run build` (GitHub Actions `ci`에서도 같은 검사가 돕니다). 흐름 E2E는 위 `scripts/e2e-local.sh`.
+- 검사: `npm run lint`, `npm run typecheck`, `npm test`(단위 테스트, `tests/unit/`), `npm run build` (GitHub Actions `ci`에서도 같은 검사가 돕니다). 흐름 E2E는 위 `scripts/e2e-local.sh`.
 - 화면만 보기: `npm run dev` 뒤 `http://localhost:3000/dev/helper-preview?mock=<이름>` — 로그인·화면 공유 없이 아이콘 모드의 주요 상태를 목업으로 바로 봅니다. 이름은 `step1`(누를 곳 찾음) · `step2` · `done`(다 됐어요) · `need-info`(알기 어려움) · `risk`(위험 경고) · `no-target`(표시 없음). 운영(`NODE_ENV=production`)에서는 404입니다.
 - AI 없이 전체 흐름 돌리기: `.env`에 `NEXT_PUBLIC_USE_MOCK=true`를 넣으면 `/api/guides` 대신 `components/guide/mock.ts` 응답을 씁니다. main·배포에서는 비워 둡니다.
 - 설계 문서: 화면 규칙 `docs/FE_CONVENTION.md`, API `docs/API_CONVENTION.md`, 서버 `docs/BE_CONVENTION.md`.
