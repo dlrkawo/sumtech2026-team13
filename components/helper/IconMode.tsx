@@ -73,30 +73,38 @@ export function IconMode(props: IconModeProps) {
           좁을 때는 Landing 아래로 이어지는 한 화면(세로형), sm부터는 Landing 폭(300px)만큼 오른쪽에 고정(가로형) */}
       <div
         className="z-30 flex w-full flex-col items-center gap-[14px] overflow-y-auto px-[16px] pt-[6px] pb-[20px]
-          sm:fixed sm:inset-y-0 sm:left-[300px] sm:right-0 sm:w-auto sm:items-center sm:justify-center sm:gap-[18px] sm:px-[28px] sm:py-[24px]"
+          sm:fixed sm:inset-y-0 sm:left-[300px] sm:right-0 sm:w-auto sm:items-center sm:justify-center sm:gap-[12px] sm:px-[28px] sm:py-[12px]"
       >
         <div className="flex flex-wrap items-center justify-center gap-[14px]">
-          <div className="relative shrink-0">
+          <div className="flex shrink-0 flex-col items-center gap-[6px]">
+            {/* 캐릭터 아래 글자는 scenarios.yaml의 단계 이름("'곁길 도우미 열기'를 누른다")과 같게 보여 준다.
+                접근성 이름은 aria-label이 정하므로 글자를 바꿔도 E2E 선택자는 그대로다 */}
             <button
               type="button"
               aria-label={props.isBubbleOpen ? "곁길 도우미 닫기" : "곁길 도우미 열기"}
               aria-expanded={props.isBubbleOpen}
               onClick={() => props.onToggleBubble(!props.isBubbleOpen)}
-              className={`rounded-[24px] drop-shadow-[0_8px_12px_rgba(0,0,0,.22)] ${FOCUS_RING}`}
+              className={`flex flex-col items-center gap-[4px] rounded-[24px] px-[10px] pb-[4px] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
             >
-              <PetChar mood={mood} sign={sign} size={88} />
+              <span className="drop-shadow-[0_8px_12px_rgba(0,0,0,.22)]">
+                <PetChar mood={mood} sign={sign} size={88} />
+              </span>
+              <span className="text-[20px] leading-[1.2] font-bold text-[#16191D]">
+                {props.isBubbleOpen ? "곁길 도우미 닫기" : "곁길 도우미 열기"}
+              </span>
             </button>
-            {/* '설정' 버튼은 항상 보인다 (scenarios.yaml 화면 흐름). 캐릭터와 같은 무게로 나란히 두지 않고
-                캐릭터 모서리에 붙는 작은 배지로 둬서 평소엔 눈에 덜 띄게 한다 (밝기 아이콘처럼 안 보이게 톱니바퀴 모양 사용) */}
+            {/* '설정' 버튼은 항상 보인다 (scenarios.yaml "아이콘 아래 '설정' 버튼").
+                톱니 + '설정' 글자, 높이 56px 이상 (FE_CONVENTION 9번), 캐릭터와 겹치지 않게 그 아래에 둔다 */}
             <button
               type="button"
               aria-label="설정"
               onClick={props.onOpenSettings}
-              className={`absolute -right-[4px] -bottom-[4px] flex h-[32px] w-[32px] items-center justify-center rounded-full border-2 border-[#C9C6BE] bg-white text-[#16191D] shadow-[0_4px_10px_rgba(0,0,0,.18)] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
+              className={`flex min-h-[56px] items-center justify-center gap-[8px] rounded-[28px] border-2 border-[#C9C6BE] bg-white px-[22px] text-[20px] font-bold text-[#16191D] shadow-[0_4px_10px_rgba(0,0,0,.14)] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
               </svg>
+              <span>설정</span>
             </button>
           </div>
 <ControlPill

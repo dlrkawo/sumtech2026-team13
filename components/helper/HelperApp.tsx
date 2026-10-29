@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useAuth } from "@/components/auth";
@@ -30,10 +30,14 @@ export function HelperApp() {
   const history = useHistory(signedIn && view === "history");
   const [question, setQuestion] = useState("");
 
+  // 로그인이 풀렸으면(401 AUTH_REQUIRED) 도움을 정리하고 로그인 창으로 돌린다.
+  // 정리(resetHelp)에 쓰는 session·pip이 이 콜백보다 뒤에 만들어지므로 ref로 건너 부른다
+  const { markSignedOut } = auth;
+  const resetHelpRef = useRef<() => void>(() => {});
   const onNeedLogin = useCallback(() => {
-    setView("settings");
-    auth.markSignedOut();
-  }, [auth]);
+    resetHelpRef.current();
+    markSignedOut();
+  }, [markSignedOut]);
   // 설정 창을 오가도 화면 공유·안내가 이어지도록 여기서 한 번만 만든다
   const session = useHelperSession({ onNeedLogin });
 
@@ -41,14 +45,37 @@ export function HelperApp() {
   const { ask } = session;
   const onHeard = useCallback(
     (text: string) => {
-      setQuestion(text);
-      void ask(text);
+      // 질문 글자 수 제한(서버 200자)에 맞춰 자른다
+      const trimmed = text.slice(0, 200);
+      setQuestion(trimmed);
+      void ask(trimmed);
     },
     [ask],
   );
   const voice = useSpeechInput(onHeard);
   // 로그인 뒤 화면을 PiP 작은 창으로 옮겨 다른 탭 위에 띄운다 (PiP 미지원 브라우저·E2E에서는 본 화면 그대로)
   const pip = usePipWindow();
+
+  // 도움을 끝내고 처음(설정 창) 상태로 되돌린다. 로그아웃·세션 만료 양쪽에서 같은 정리를 한다
+  //   (다음 사람에게 이전 사람의 사진·안내·질문이 남지 않도록)
+  const { close: closePip } = pip;
+  const { stop: stopSession } = session;
+  const resetHelp = useCallback(() => {
+    closePip();
+    stopSession();
+    setQuestion("");
+    setView("settings");
+  }, [closePip, stopSession]);
+
+  useEffect(() => {
+    resetHelpRef.current = resetHelp;
+  }, [resetHelp]);
+
+  // 설정·기록 요청이 401 AUTH_REQUIRED로 실패해도 같은 길로 로그인 창에 보낸다
+  const sessionExpired = signedIn && (Boolean(settingsError?.needsLogin) || Boolean(history.error?.needsLogin));
+  useEffect(() => {
+    if (sessionExpired) onNeedLogin();
+  }, [sessionExpired, onNeedLogin]);
 
   if (auth.state.status === "checking") return null;
   if (auth.state.status === "guest") {
@@ -106,9 +133,7 @@ export function HelperApp() {
           onOpenHistory={() => setView("history")}
           onStart={startHelp}
           onLogout={() => {
-            pip.close();
-            session.stop();
-            setView("settings");
+            resetHelp();
             void auth.logout();
           }}
         />

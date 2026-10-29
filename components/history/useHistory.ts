@@ -27,6 +27,15 @@ export function useHistory(enabled: boolean) {
     };
   }, [enabled]);
 
+  // 기록 창을 닫거나 로그아웃·세션 만료로 enabled가 꺼지면 목록을 비운다 (다음에 열 때 새로 불러오고, 이전 사람의 기록이 남지 않는다)
+  useEffect(() => {
+    if (!enabled) return;
+    return () => {
+      setItems(null);
+      setError(null);
+    };
+  }, [enabled]);
+
   const clear = useCallback(async () => {
     try {
       await clearHistory();
