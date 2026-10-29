@@ -10,6 +10,7 @@ import { useSpeechInput } from "@/components/voice";
 import { AuthWindow } from "./AuthWindow";
 import { HistoryWindow } from "./HistoryWindow";
 import { IconMode } from "./IconMode";
+import { LoadingWindow } from "./LoadingWindow";
 import { SettingsWindow } from "./SettingsWindow";
 import { useHelperSession } from "./useHelperSession";
 
@@ -45,7 +46,7 @@ export function HelperApp() {
   );
   const voice = useSpeechInput(onHeard);
 
-  if (auth.state.status === "checking") return null;
+  if (auth.state.status === "checking") return <LoadingWindow />;
   if (auth.state.status === "guest") {
     return (
       <AuthWindow
