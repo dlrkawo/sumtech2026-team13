@@ -28,6 +28,8 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   const [notice, setNotice] = useState<HelperNotice | null>(null);
   const [isBubbleOpen, setBubbleOpen] = useState(true);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
+  // 같은 질문을 이어서 물을 때마다 +1, 새 질문을 물으면 1로 되돌아간다 (v2 S2·S3)
+  const [step, setStep] = useState(1);
 
   // ▶: 도움을 켜고 화면 공유를 요청한다. 공유가 안 돼도 켜진 상태로 두고 사진 올리기로 이어 간다
   const play = useCallback(async () => {
@@ -46,6 +48,7 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     setShownImage(null);
     setNotice(null);
     setLastQuestion(null);
+    setStep(1);
   }, [share, guide]);
 
   const pickPhoto = useCallback(async (file: File) => {
@@ -58,6 +61,23 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
       setNotice({ kind: "error", error: toUserError(e) });
     }
   }, []);
+
+  // 실제 분석 요청 한 번. image는 호출하는 쪽에서 이미 정해 온다 (공유 캡처 / 올린 사진 / 다음 화면 사진)
+  const runGuide = useCallback(
+    async (image: string, question: string, isContinuation: boolean) => {
+      // 같은 일을 이어서 물으면 바로 전 안내를 같이 보내 다음 단계를 받는다 (API_CONVENTION.md 10번)
+      const prev = guide.state.status === "success" ? guide.state.data : null;
+      const isSameTask = isContinuation || lastQuestion === question;
+      const previousInstruction = isSameTask && prev?.status === "IN_PROGRESS" ? prev.instruction : undefined;
+
+      setLastQuestion(question);
+      setStep(previousInstruction ? (s) => s + 1 : 1);
+      setNotice(null);
+      setShownImage(image);
+      await guide.ask({ image, question, ...(previousInstruction ? { previousInstruction } : {}) });
+    },
+    [guide, lastQuestion],
+  );
 
   const ask = useCallback(
     async (raw: string, options?: { next?: boolean }) => {
@@ -79,22 +99,31 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
         return setNotice({ kind: "needScreen", reason: share.error?.message });
       }
 
-      // 같은 일을 이어서 물으면 바로 전 안내를 같이 보내 다음 단계를 받는다 (API_CONVENTION.md 10번)
-      const prev = guide.state.status === "success" ? guide.state.data : null;
-      const isSameTask = options?.next || lastQuestion === question;
-      const previousInstruction = isSameTask && prev?.status === "IN_PROGRESS" ? prev.instruction : undefined;
-
-      setLastQuestion(question);
-      setNotice(null);
-      setShownImage(image);
-      await guide.ask({ image, question, ...(previousInstruction ? { previousInstruction } : {}) });
+      await runGuide(image, question, Boolean(options?.next));
     },
-    [guide, isOn, share, photo, lastQuestion],
+    [guide.isLoading, isOn, share, photo, runGuide],
   );
 
   const next = useCallback(() => {
     if (lastQuestion) void ask(lastQuestion, { next: true });
   }, [ask, lastQuestion]);
+
+  // '다음 화면 보기': 화면 공유 없이 사진으로 묻던 중, 다음 화면 사진을 올려 바로 전 안내와 함께 이어서 분석을 요청한다 (v2 S3)
+  const nextScreen = useCallback(
+    async (file: File) => {
+      if (!lastQuestion || guide.isLoading) return;
+      setBubbleOpen(true);
+      try {
+        const image = await fileToDataUrl(file);
+        setPhoto(image);
+        setNotice(null);
+        await runGuide(image, lastQuestion, true);
+      } catch (e) {
+        setNotice({ kind: "error", error: toUserError(e) });
+      }
+    },
+    [lastQuestion, guide.isLoading, runGuide],
+  );
 
   // 로그인이 풀렸으면(401 AUTH_REQUIRED) 로그인 창으로 돌린다
   const needsLogin = guide.state.status === "error" && guide.state.error.needsLogin;
@@ -117,10 +146,12 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     shownImage,
     notice: notice ?? shareNotice,
     isBubbleOpen,
+    step,
     play,
     stop,
     ask,
     next,
+    nextScreen,
     pickPhoto,
     retry: guide.retry,
     setBubbleOpen,

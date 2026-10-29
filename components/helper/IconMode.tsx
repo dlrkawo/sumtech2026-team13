@@ -15,12 +15,15 @@ import type { HelperNotice } from "./useHelperSession";
 // '설정' 버튼은 항상 보인다 (scenarios.yaml 화면 흐름)
 export interface IconModeProps {
   isOn: boolean;
+  isSharing: boolean;
   // 공유 중인 화면이나 올린 사진이 있음
   hasScreen: boolean;
   hasPhoto: boolean;
   isAnswering: boolean;
   guide: GuideResponse | null;
   guideImage: string | null;
+  // 같은 질문을 이어서 물을 때마다 +1 (v2 S2·S3)
+  step: number;
   error: { message: string; canRetry: boolean } | null;
   notice: HelperNotice | null;
   showEdge: boolean;
@@ -31,6 +34,7 @@ export interface IconModeProps {
   onStop: () => void;
   onAsk: (question: string) => void;
   onNext: () => void;
+  onPickNextScreen: (file: File) => void;
   onRetry: () => void;
   onQuestionChange: (question: string) => void;
   onPickPhoto: (file: File) => void;
@@ -47,10 +51,13 @@ export function IconMode(props: IconModeProps) {
     isLoading: props.isAnswering,
     guide: props.guide,
     image: props.guideImage,
+    step: props.step,
+    isSharing: props.isSharing,
     error: props.error,
     notice: props.notice,
     idleText: idleText(props),
     onNext: props.onNext,
+    onPickNextScreen: props.onPickNextScreen,
     onRetry: props.onRetry,
     onClose: () => props.onToggleBubble(false),
   };

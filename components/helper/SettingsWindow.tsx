@@ -52,6 +52,12 @@ export function SettingsWindow({
               checked={settings.edgeDisplay}
               onChange={(edgeDisplay) => onUpdate({ edgeDisplay })}
             />
+            <SettingSwitch
+              label="기록 저장"
+              description="끄면 물어본 말과 안내 문장이 도움 기록에 남지 않아요"
+              checked={settings.saveHistory}
+              onChange={(saveHistory) => onUpdate({ saveHistory })}
+            />
           </>
         ) : (
           !error && <p className={`${MUTED} py-[12px]`}>설정을 불러오고 있어요…</p>

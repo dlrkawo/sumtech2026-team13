@@ -17,11 +17,13 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
       <Landing />
       <IconMode
         isOn
+        isSharing={false}
         hasScreen
         hasPhoto
         isAnswering={mock === "loading"}
         guide={guide}
         guideImage={image}
+        step={1}
         error={null}
         notice={null}
         showEdge={false}
@@ -32,6 +34,7 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
         onStop={noop}
         onAsk={noop}
         onNext={noop}
+        onPickNextScreen={noop}
         onRetry={noop}
         onQuestionChange={setQuestion}
         onPickPhoto={noop}
