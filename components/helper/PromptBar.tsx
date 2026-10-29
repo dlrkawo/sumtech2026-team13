@@ -1,40 +1,29 @@
-"use client";
+import type { FormEvent } from "react";
 
-import { useCallback, useState, type FormEvent } from "react";
-
-import { useSpeechInput } from "@/components/voice";
+import type { SpeechInputStatus } from "@/components/voice";
 
 import { FOCUS_RING } from "./styles";
 
 // 아이콘 아래 입력창: 하고 싶은 일 적기 + (음성 인식 켜짐) 마이크 + 물어보기
+// 음성 인식은 바깥(HelperApp)에서 돌리고, 여기는 상태와 버튼만 보여 준다
 // E2E 이름: getByLabel("질문 입력"), getByRole("button", { name: "물어보기" | "마이크" })
-export function PromptBar({
-  voiceEnabled,
-  isAnswering,
-  onAsk,
-}: {
-  voiceEnabled: boolean;
+export interface PromptBarProps {
+  question: string;
   isAnswering: boolean;
+  // null이면 마이크 버튼을 숨긴다 (설정에서 음성 인식 꺼짐)
+  voice: { status: SpeechInputStatus; onToggle: () => void } | null;
+  onQuestionChange: (question: string) => void;
   onAsk: (question: string) => void;
-}) {
-  const [question, setQuestion] = useState("");
+}
 
-  // 말로 들은 문장은 입력창에 적고 바로 물어본다 (S8)
-  const onHeard = useCallback(
-    (text: string) => {
-      setQuestion(text);
-      onAsk(text);
-    },
-    [onAsk],
-  );
-  const voice = useSpeechInput(onHeard);
-
+export function PromptBar({ question, isAnswering, voice, onQuestionChange, onAsk }: PromptBarProps) {
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (question.trim()) onAsk(question);
   }
 
   const canAsk = question.trim().length > 0 && !isAnswering;
+  const isListening = voice?.status === "listening";
 
   return (
     <div className="flex flex-col gap-[6px]">
@@ -49,18 +38,18 @@ export function PromptBar({
           id="helper-question"
           type="text"
           value={question}
-          onChange={(e) => setQuestion(e.target.value)}
+          onChange={(e) => onQuestionChange(e.target.value)}
           placeholder="하고 싶은 일을 적어 주세요"
           maxLength={200}
           className="min-h-[56px] min-w-0 flex-1 bg-transparent text-[21px] text-[#16191D] outline-none placeholder:text-[#6B7178]"
         />
-        {voiceEnabled && (
+        {voice && (
           <button
             type="button"
             aria-label="마이크"
-            aria-pressed={voice.isListening}
-            onClick={voice.isListening ? voice.cancel : voice.listen}
-            className={`flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full border-2 ${voice.isListening ? "border-[#C8102E] bg-[#FBE9EB] text-[#9B1C1C]" : "border-[#C9C6BE] bg-white text-[#16191D]"} ${FOCUS_RING}`}
+            aria-pressed={isListening}
+            onClick={voice.onToggle}
+            className={`flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full border-2 ${isListening ? "border-[#C8102E] bg-[#FBE9EB] text-[#9B1C1C]" : "border-[#C9C6BE] bg-white text-[#16191D]"} ${FOCUS_RING}`}
           >
             <svg
               width="24"
@@ -84,7 +73,7 @@ export function PromptBar({
           물어보기
         </button>
       </form>
-      {voiceEnabled && voice.status !== "idle" && (
+      {voice && voice.status !== "idle" && (
         <p role="status" className="rounded-[14px] bg-white/95 px-[14px] py-[6px] text-[20px] font-bold text-[#16191D]">
           {voice.status === "listening" && "듣고 있어요. 하고 싶은 일을 말해 주세요."}
           {voice.status === "unsupported" && "이 브라우저에서는 음성 인식이 안 돼요. 글로 적어 주세요."}

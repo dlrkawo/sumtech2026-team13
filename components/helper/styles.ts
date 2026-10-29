@@ -13,6 +13,6 @@ export const BUTTON_SECONDARY =
   FOCUS_RING;
 
 export const LINK_BUTTON =
-  "min-h-[48px] px-[4px] text-[20px] text-[#1D4E89] underline underline-offset-4 " + FOCUS_RING;
+  "min-h-[56px] px-[4px] text-[20px] text-[#1D4E89] underline underline-offset-4 " + FOCUS_RING;
 
 export const MUTED = "text-[20px] text-[#454B53]";

@@ -28,11 +28,11 @@ export function SettingSwitch({
         aria-label={label}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`relative h-[44px] w-[76px] shrink-0 rounded-[22px] disabled:opacity-50 ${checked ? "bg-[#1D4E89]" : "bg-[#C9C6BE]"} ${FOCUS_RING}`}
+        className={`relative h-[56px] w-[92px] shrink-0 rounded-[28px] disabled:opacity-50 ${checked ? "bg-[#1D4E89]" : "bg-[#C9C6BE]"} ${FOCUS_RING}`}
       >
         <span
           aria-hidden="true"
-          className={`absolute top-[4px] h-[36px] w-[36px] rounded-full bg-white shadow transition-[left] ${checked ? "left-[36px]" : "left-[4px]"}`}
+          className={`absolute top-[5px] h-[46px] w-[46px] rounded-full bg-white shadow transition-[left] ${checked ? "left-[41px]" : "left-[5px]"}`}
         />
       </button>
       <span aria-hidden="true" className="w-[36px] text-[20px] font-bold">

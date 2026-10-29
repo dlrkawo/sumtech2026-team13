@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { useHistory } from "@/components/history";
+import type { GuideHistoryResponse } from "@/server/history/schema";
+import type { UserError } from "@/lib/errors";
 
 import { BUTTON_PRIMARY, BUTTON_SECONDARY, LINK_BUTTON, MUTED } from "./styles";
 import { WindowFrame } from "./WindowFrame";
@@ -14,9 +15,22 @@ const DATE_FORMAT = new Intl.DateTimeFormat("ko-KR", {
   minute: "2-digit",
 });
 
-// 도움 기록 (S7). 열 때마다 새로 불러와 방금 물어본 것도 보인다
-export function HistoryWindow({ onBack, onStart }: { onBack: () => void; onStart: () => void }) {
-  const { items, error, isLoading, clear } = useHistory(true);
+// 도움 기록 (S7). 목록과 지우기는 바깥(HelperApp의 useHistory)에서 받는다
+export function HistoryWindow({
+  items,
+  error,
+  isLoading,
+  onClear,
+  onBack,
+  onStart,
+}: {
+  items: GuideHistoryResponse | null;
+  error: UserError | null;
+  isLoading: boolean;
+  onClear: () => Promise<void>;
+  onBack: () => void;
+  onStart: () => void;
+}) {
   // 지우기는 되돌릴 수 없어서 한 번 더 묻는다
   const [isConfirming, setConfirming] = useState(false);
 
@@ -63,7 +77,7 @@ export function HistoryWindow({ onBack, onStart }: { onBack: () => void; onStart
                 <button
                   type="button"
                   className={BUTTON_SECONDARY}
-                  onClick={() => void clear().then(() => setConfirming(false))}
+                  onClick={() => void onClear().then(() => setConfirming(false))}
                 >
                   모두 지우기
                 </button>
