@@ -76,18 +76,28 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-      # 브라우저 다운로드를 건너뛴다. 키는 e2e의 Playwright 버전이 바뀌면 새로 받도록 package.json 기준
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
+      # 브라우저 다운로드를 건너뛴다. 키는 e2e의 Playwright 버전이 바뀌면 새로 받도록 package.json 기준.
+      # actions/cache는 잡이 성공해야 저장하는데 E2E가 실패해도 저장되도록 복원·저장을 나눈다
+      - name: Restore Playwright browsers
+        id: playwright-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package.json') }}
+      - name: Install Playwright
+        working-directory: e2e
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: Save Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package.json') }}
       - name: Run scenario E2E
         working-directory: e2e
-        run: |
-          npm install
-          npx playwright install --with-deps chromium
-          npx playwright test --pass-with-no-tests --forbid-only
+        run: npx playwright test --pass-with-no-tests --forbid-only
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v7
