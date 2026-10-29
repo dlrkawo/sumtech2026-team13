@@ -8,13 +8,31 @@ import { z } from "zod";
 export const MAX_IMAGE_DATA_URL_LENGTH = 3 * 1024 * 1024;
 export const IMAGE_DATA_URL_PATTERN = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 
+// 바로 전 안내 문장을 받아 둘 최대 길이. 넘으면 거절하지 않고 잘라서 쓴다
+export const MAX_PREVIOUS_INSTRUCTION_LENGTH = 300;
+
+// 선택. 바로 전에 받은 안내 문장. 있으면 AI가 "다음 단계"를 이어서 판단하는 데 쓴다 (없으면 화면과 질문만으로 판단)
+// 우리 AI가 만든 문장이라 사용자가 고칠 수 없으므로, 길면 오류(재시도 불가)를 내지 않고 잘라서 받는다
+export const previousInstructionSchema = z
+  .string({ error: "바로 전 안내를 다시 확인해 주세요." })
+  .trim()
+  .transform((text) => text.slice(0, MAX_PREVIOUS_INSTRUCTION_LENGTH))
+  .optional();
+
 // image는 문자열인지만 여기서 보고, 형식·크기는 service에서 IMAGE_INVALID / IMAGE_TOO_LARGE로 구분해 알린다
-export const guideRequestSchema = z.object({
-  image: z.string().min(1, "화면 사진이 필요해요."),
-  question: z.string().trim().min(1, "하고 싶은 일을 적어 주세요.").max(200, "200자 안으로 적어 주세요."),
-  // 선택. 바로 전에 받은 안내 문장. 있으면 AI가 "다음 단계"를 이어서 판단하는 데 쓴다 (없으면 화면과 질문만으로 판단)
-  previousInstruction: z.string().trim().max(300).optional(),
-});
+// 필드가 없거나 타입이 틀릴 때도 zod 영어 기본 문구 대신 화면에 보여 줄 문장을 쓴다 ({ error })
+export const guideRequestSchema = z.object(
+  {
+    image: z.string({ error: "화면 사진이 필요해요." }).min(1, "화면 사진이 필요해요."),
+    question: z
+      .string({ error: "하고 싶은 일을 적어 주세요." })
+      .trim()
+      .min(1, "하고 싶은 일을 적어 주세요.")
+      .max(200, "200자 안으로 적어 주세요."),
+    previousInstruction: previousInstructionSchema,
+  },
+  { error: "요청 형식이 올바르지 않아요." },
+);
 export type GuideRequest = z.infer<typeof guideRequestSchema>;
 
 export const GUIDE_STATUSES = ["IN_PROGRESS", "DONE", "NEED_INFO"] as const;
