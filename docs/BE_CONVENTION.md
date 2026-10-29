@@ -158,6 +158,9 @@ route.ts → service → repository → DB (server/db/client.ts의 query)
 | `AUTH_REQUIRED` | 401 | 로그인 필요 |
 | `IMAGE_INVALID` | 400 | 화면 이미지가 data URL(JPEG/PNG/WEBP base64) 형식이 아님 |
 | `IMAGE_TOO_LARGE` | 400 | 화면 이미지 data URL 문자열이 3MB 초과 |
+| `AUDIO_INVALID` | 400 | 목소리 녹음이 data URL(webm·ogg·mp4·mp3·wav base64) 형식이 아님 |
+| `AUDIO_TOO_LARGE` | 400 | 목소리 녹음 data URL 문자열이 1MB 초과 |
+| `AUDIO_NO_SPEECH` | 400 | 녹음에서 알아들은 말이 없음 |
 | `AUTH_INVALID_CREDENTIALS` | 401 | 이메일 또는 비밀번호가 맞지 않음 |
 | `AUTH_EMAIL_TAKEN` | 409 | 이미 가입한 이메일 |
 | `AI_UNAVAILABLE` | 503 | AI 키가 없거나 비활성이라 분석할 수 없음 (앱은 정상 기동) |

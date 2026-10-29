@@ -137,12 +137,14 @@
 | 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
 | 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
 | 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 구현 |
+| 목소리로 묻기 | POST | `/api/voice-guides` | `VoiceGuideRequest` `{ image, audio, previousInstruction? }` | `VoiceGuideResponse` `{ question, instruction, target, risk, status }` | 필요 | hyuckkim | - | 구현 |
 | 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` (최신순, 최대 50개) | 필요 | 이감재 | S7 | 구현 |
 | 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 개인정보 보호 | 구현 |
 
-- 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`
+- 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`, `server/voice-guide/schema.ts`
 - 설정 기본값: 화면 가장자리 표시 켜짐, 음성 인식 꺼짐, 누를 곳 표시 `BORDER`, 위험 경고 켜짐, 기록 저장 켜짐 (`DEFAULT_SETTINGS`)
 - `POST /api/guides`의 `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 다음 단계를 이어서 판단한다
 - `POST /api/guides`는 기록 저장 설정이 켜져 있으면 질문·안내 문장만 도움 기록에 남긴다 (화면 이미지는 저장하지 않음)
+- `POST /api/voice-guides`는 목소리(`audio`, data URL 문자열 1MB 이하, webm·ogg·mp4·mp3·wav)를 `google/gemini-3.5-transcribe`로 글자로 바꿔 질문으로 삼고, `POST /api/guides`와 같은 안내를 만든다(위험 경고·도움 기록도 같음). 응답의 `question`은 알아들은 문장
 - 상태: 명세(타입 확정) → 구현 → 배포
 - 도움 기록 저장: hyuckkim의 `POST /api/guides`는 안내를 만든 뒤 `recordGuideHistory(userId, question, instruction)`(`server/history/service.ts`)을 호출. 위험 경고 여부는 `getSettings(userId).riskWarning`(`server/settings/service.ts`)
