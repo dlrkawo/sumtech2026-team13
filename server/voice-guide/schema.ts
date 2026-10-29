@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { GuideResponse } from "../guide/schema";
+import { previousInstructionSchema, type GuideResponse } from "../guide/schema";
 
 // 목소리로 묻기 (POST /api/voice-guides) — 담당: hyuckkim
 // 화면 이미지 + 녹음한 목소리 → 목소리를 글자로 바꿔 질문으로 삼고, POST /api/guides와 같은 안내를 돌려준다.
@@ -18,8 +18,8 @@ export const voiceGuideRequestSchema = z.object({
   // 값이 아예 없을 때도 영어 기본 문구 대신 화면에 보여 줄 문장을 쓴다
   image: z.string({ error: "화면 사진이 필요해요." }).min(1, "화면 사진이 필요해요."),
   audio: z.string({ error: "목소리 녹음이 필요해요." }).min(1, "목소리 녹음이 필요해요."),
-  // 선택. 바로 전에 받은 안내 문장 (POST /api/guides와 같음)
-  previousInstruction: z.string().trim().max(300).optional(),
+  // 선택. 바로 전에 받은 안내 문장 (POST /api/guides와 같음: 300자를 넘으면 앞 300자만 사용)
+  previousInstruction: previousInstructionSchema,
 });
 export type VoiceGuideRequest = z.infer<typeof voiceGuideRequestSchema>;
 

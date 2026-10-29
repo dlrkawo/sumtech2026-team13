@@ -104,14 +104,14 @@
 
 ## 8. 화면 이름과 E2E (키트 규칙)
 
-- E2E는 `docs/scenarios.yaml`의 메뉴·버튼 이름으로 화면을 조작합니다 (`e2e/scenarios/S1~S6.spec.ts`).
+- E2E는 `docs/scenarios.yaml`의 메뉴·버튼 이름으로 화면을 조작합니다 (`e2e/scenarios/S1~S7.spec.ts`).
 - FE는 버튼·메뉴 글자를 scenarios.yaml과 똑같이 맞추고, 바꾸면 scenarios.yaml과 spec도 같은 PR에서 수정
 - BE가 만드는 화면 글자도 같습니다: 위험 경고 문구(`server/guide/prompt.ts`의 `RISK_MESSAGES`)는 S4가 글자 그대로 찾으므로, 바꾸면 scenarios.yaml·spec도 함께 수정
 - E2E에 필요한 선행 데이터는 BE가 `server/db/init.ts`의 시드로 준비, 업로드용 사진은 `e2e/fixtures/`에 커밋 (파일당 10MB 이하)
 - E2E는 실제 앱과 실제 AI 응답으로 돌기 때문에 가짜 응답(목업)으로 통과시키지 않음. 목업은 개발 중에만 사용 (`NEXT_PUBLIC_USE_MOCK`)
 - 주 사용 플랫폼은 `desktop`(scenarios.yaml), PC 화면 크기(1440×900)에서 깨지지 않아야 함
 - 로그인 전에는 로그인이 필요한 화면이 열리지 않아야 하고, 없는 주소는 404 화면
-- 한 번에 확인: `bash scripts/e2e-local.sh` (빈 DB 기동 → `/__health` → S1~S6)
+- 한 번에 확인: `bash scripts/e2e-local.sh` (빈 DB 기동 → `/__health` → S1~S7)
 
 ## 9. 협업 절차
 
@@ -123,13 +123,13 @@
 
 ## 10. API 목록 (진행 현황)
 
-요청·응답 타입은 `server/<domain>/schema.ts`가 기준입니다. FE는 `import type`으로 가져다 씁니다. '흐름'은 `docs/scenarios.yaml`의 S1~S6입니다.
+요청·응답 타입은 `server/<domain>/schema.ts`가 기준입니다. FE는 `import type`으로 가져다 씁니다. '흐름'은 `docs/scenarios.yaml`의 S1~S7입니다.
 
 | 기능 | 메서드 | URL | 요청 | 응답 `data` | 로그인 | 담당 BE | 흐름 | 상태 |
 |---|---|---|---|---|---|---|---|---|
 | 헬스체크 (키트) | GET | `/__health` | - | `{ releaseId }` (공통 응답 형식 아님) | 불필요 | 이감재 | 채점 시작 신호 | 배포 |
 | 회원가입 | POST | `/api/auth/signup` | `AuthRequest` `{ email, password }` | `AuthUserResponse` `{ id, email }` (201, 쿠키 설정) | 불필요 | 이감재 | S1, S6 | 구현 |
-| 로그인 | POST | `/api/auth/login` | `AuthRequest` | `AuthUserResponse` (쿠키 설정) | 불필요 | 이감재 | S2~S5 (시드 계정) | 구현 |
+| 로그인 | POST | `/api/auth/login` | `AuthRequest` | `AuthUserResponse` (쿠키 설정) | 불필요 | 이감재 | S2~S5, S7 (시드 계정) | 구현 |
 | 로그아웃 | POST | `/api/auth/logout` | - | 204 (쿠키 삭제) | 필요 | 이감재 | - | 구현 |
 | 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 첫 화면 로그인 확인 | 구현 |
 | 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | 설정 창 | 구현 |
@@ -140,14 +140,15 @@
 | 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 도움 기록 창 | 구현 |
 
 - 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`, `server/voice-guide/schema.ts`
-- 입력 제한: 비밀번호 8~72자, `question` 1~200자, `previousInstruction` 300자 이하, 이미지 3MB, 목소리 1MB
+- 입력 제한: 비밀번호 8~72자, `question` 1~200자, `previousInstruction` 300자를 넘으면 앞 300자만 사용(2000자 초과만 400), 검사 오류 문구는 모두 한국어, 이미지 3MB, 목소리 1MB
 - 설정 기본값 (`DEFAULT_SETTINGS`): 화면 가장자리 표시 켜짐, 음성 인식 꺼짐, 누를 곳 표시 `BORDER`, 위험 경고 켜짐, 기록 저장 켜짐
   - 설정 창에 스위치가 있는 값: `edgeDisplay`, `voiceInput`, `saveHistory`. `highlightStyle`(`BORDER`·`ARROW`·`DIM`)과 `riskWarning`은 BE만 지원하고 화면에는 아직 없음
 - 상태: 명세(타입 확정) → 구현 → 배포
 
 ### 10-1. `POST /api/guides` 동작
 
-- `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 같은 일의 **다음 단계**를 이어서 판단한다 (FE의 '눌렀어요, 다음 알려 주세요')
+- `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 같은 일의 **다음 단계**를 이어서 판단한다
+  - FE가 보내는 경우: '눌렀어요, 다음 알려 주세요'를 눌렀을 때, 그리고 바로 전과 **같은 질문**으로 다시 '물어보기'했을 때(예: '사진 바꾸기' 뒤 같은 질문). 바로 전 안내가 `IN_PROGRESS`일 때만 보내고, 이때 'N단계'가 하나 올라간다 (`components/helper/useHelperSession.ts`)
 - AI 모델 `anthropic/claude-sonnet-5.5`(`server/guide/service.ts`), 한 번 25초 제한, 답 형식이 깨지면 한 번만 다시 묻고 답이 잘리면 바로 `AI_FAILED`
 - 기록 저장 설정이 켜져 있으면 **질문과 안내 문장만** 도움 기록에 남긴다 (화면 이미지는 저장하지 않음). 저장 시점에 DB의 최신 설정을 읽는다
   - 기록 저장이 실패해도 안내는 그대로 응답한다 (실패는 서버 로그에 `[guide] failed to record history`)
@@ -158,7 +159,7 @@
 | `status` | `target` | 뜻 | FE 표시 |
 |---|---|---|---|
 | `IN_PROGRESS` | 있음 | 다음에 누를 곳을 찾음 | 안내 문장 + 사진 위 누를 곳 표시, '눌렀어요, 다음 알려 주세요' |
-| `IN_PROGRESS` | `null` | 다음 할 일은 있지만 누를 위치를 못 짚음 | 안내 문장만 (누를 곳을 찾았다고 표시하지 않는 것을 권장) |
+| `IN_PROGRESS` | `null` | 다음 할 일은 있지만 누를 위치를 못 짚음 | 안내 문장, '눌렀어요, 다음 알려 주세요' ('누를 곳을 찾았어요'와 누를 곳 테두리는 표시하지 않음) |
 | `NEED_INFO` | 대부분 `null` | 화면만으로 판단하기 어려움 (무엇을 확인할지 안내) | 안내 문장, 다른 화면으로 다시 묻기 |
 | `DONE` | 항상 `null` | 완료 화면 (BE가 `target`을 비움) | '다 됐어요' + 안내 문장 |
 

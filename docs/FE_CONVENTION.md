@@ -227,17 +227,17 @@ export function createGuide(body: GuideRequest) {
 
 ### 좌표
 - BE와 주고받는 좌표는 **이미지 기준 0~1 비율** `{ x, y, width, height }` (좌상단 기준, API_CONVENTION.md 5번). 픽셀 변환은 그리기 직전에만
-- 좌표 디버그 모드(격자·좌표 표시)를 `?debug=1`로 켤 수 있게 유지
+- 누를 곳 위치 확인은 `/dev/helper-preview`(개발 전용 미리보기, 운영 404)와 `scripts/smoke-guide.sh`로 한다. `?debug=1` 좌표 디버그 모드는 만들지 않았다
 
 ### Picture-in-Picture
 - PiP 창 열기도 사용자 클릭에서만 호출
 - React는 `createPortal`로 PiP 창의 `document.body`에 렌더링하고, **열 때 원래 문서의 스타일시트를 PiP 창으로 복사** (안 하면 Tailwind 미적용)
 - PiP 관련 코드는 `components/pip/` 안에서만 다룸
-- 기능 지원 여부를 먼저 확인 (`"documentPictureInPicture" in window`). 미지원 시 "크롬 또는 엣지에서 열어 주세요" 안내
+- 기능 지원 여부를 먼저 확인 (`"documentPictureInPicture" in window`, `usePipWindow().isSupported`). 미지원 브라우저에서는 '작은 창으로 띄우기' 버튼을 보이지 않는다 (problem.yaml F8)
 - `window`는 서버에서 렌더링될 때 없으므로 `useEffect` 안이나 클릭 핸들러에서만 접근
 
 ### 음성
-- 읽기는 `speechSynthesis` (`lang: "ko-KR"`), 입력은 `SpeechRecognition` / `webkitSpeechRecognition`
+- 입력은 `SpeechRecognition` / `webkitSpeechRecognition` (`components/voice/useSpeechInput.ts`, 설정의 '음성 인식'을 켰을 때만). 안내를 소리로 읽어 주는 `speechSynthesis`는 아직 만들지 않았다
 - 음성 인식이 실패해도 진행할 수 있게 **텍스트 입력과 자주 쓰는 목표 버튼을 항상 함께** 제공
 
 ### 키트 E2E 대응 (중요)
@@ -311,6 +311,6 @@ NEXT_PUBLIC_USE_MOCK=
 - [ ] HTTPS 배포 주소에서 화면 공유가 시작되는지
 - [ ] 전체 화면 공유 후 다른 프로그램으로 넘어가도 PiP 창이 위에 떠 있는지
 - [ ] 다른 탭에 있을 때도 캡처·변화 감지가 계속 동작하는지
-- [ ] 빨간 테두리 위치가 실제 버튼과 맞는지 (`?debug=1`)
+- [ ] 빨간 테두리 위치가 실제 버튼과 맞는지 (`/dev/helper-preview`, `scripts/smoke-guide.sh`)
 - [ ] 브라우저의 "공유 중지"를 눌렀을 때 정상 종료되는지
-- [ ] 음성 읽기·입력이 한국어로 동작하는지
+- [ ] 음성 입력이 한국어로 동작하는지
