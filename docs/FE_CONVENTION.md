@@ -144,10 +144,11 @@ export interface ApiResponse<T> {
   data: T;
   message: string;
   code?: string;
+  retryable?: boolean; // 실패 응답만: 같은 요청을 다시 보내면 될 수 있는지
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string) {
+  constructor(public status: number, public code: string, message: string, public retryable?: boolean) {
     super(message);
   }
 }
@@ -176,6 +177,7 @@ export async function request<T>(path: `/api/${string}`, init?: RequestInit): Pr
       res.status,
       body?.code ?? "INTERNAL_SERVER_ERROR",
       body?.message ?? "잠시 후 다시 시도해 주세요.",
+      body?.retryable,
     );
   }
   return body.data;
@@ -198,6 +200,7 @@ export function createGuide(body: GuideRequest) {
   - 400(`IMAGE_INVALID`, `IMAGE_TOO_LARGE`): `message` 표시 + 다른 사진을 고르거나 화면을 다시 보게 안내
   - 401(`AUTH_REQUIRED`): 로그인 화면으로 이동
   - 429/503(`AI_*`): "잠시 후 다시 시도해 주세요" + **다시 시도 버튼**
+- **다시 시도 버튼은 응답의 `retryable`로 정합니다** (`lib/errors.ts`의 `toUserError` → `canRetry`). `retryable`이 없을 때(네트워크 오류 등)만 위처럼 상태 코드로 판단합니다
   - 404: "없는 페이지" 처리
 - BE `message`는 사용자에게 그대로 보여도 되는 문장이므로 그대로 표시. 500과 네트워크 오류만 FE 공통 문구 사용
 - enum 값(UPPER_SNAKE_CASE)의 한글 표시 변환은 FE가 `lib/constants.ts` 또는 기능별 `types.ts`에서 관리
