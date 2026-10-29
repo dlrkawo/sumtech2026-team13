@@ -8,12 +8,27 @@ import { z } from "zod";
 export const MAX_IMAGE_DATA_URL_LENGTH = 3 * 1024 * 1024;
 export const IMAGE_DATA_URL_PATTERN = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
 
+// 바로 전에 받은 안내 문장 (선택). 있으면 AI가 "다음 단계"를 이어서 판단하는 데 쓴다 (없으면 화면과 질문만으로 판단)
+// AI 안내 문장은 길이 제한이 없어서, 300자를 넘어도 '눌렀어요, 다음 알려 주세요'가 막히지 않게 오류 대신 앞 300자만 쓴다.
+// 2000자를 넘는 비정상 요청만 400 (화면에 그대로 보이므로 영어 기본 문구 대신 한국어 문구)
+export const MAX_PREVIOUS_INSTRUCTION_LENGTH = 300;
+export const previousInstructionSchema = z
+  .string({ error: "바로 전 안내를 다시 확인해 주세요." })
+  .trim()
+  .max(2000, "바로 전 안내가 너무 길어요. 새로 물어봐 주세요.")
+  .transform((s) => s.slice(0, MAX_PREVIOUS_INSTRUCTION_LENGTH))
+  .optional();
+
 // image는 문자열인지만 여기서 보고, 형식·크기는 service에서 IMAGE_INVALID / IMAGE_TOO_LARGE로 구분해 알린다
+// 값이 아예 없을 때도 영어 기본 문구 대신 화면에 보여 줄 문장을 쓴다 (POST /api/voice-guides와 같음)
 export const guideRequestSchema = z.object({
-  image: z.string().min(1, "화면 사진이 필요해요."),
-  question: z.string().trim().min(1, "하고 싶은 일을 적어 주세요.").max(200, "200자 안으로 적어 주세요."),
-  // 선택. 바로 전에 받은 안내 문장. 있으면 AI가 "다음 단계"를 이어서 판단하는 데 쓴다 (없으면 화면과 질문만으로 판단)
-  previousInstruction: z.string().trim().max(300).optional(),
+  image: z.string({ error: "화면 사진이 필요해요." }).min(1, "화면 사진이 필요해요."),
+  question: z
+    .string({ error: "하고 싶은 일을 적어 주세요." })
+    .trim()
+    .min(1, "하고 싶은 일을 적어 주세요.")
+    .max(200, "200자 안으로 적어 주세요."),
+  previousInstruction: previousInstructionSchema,
 });
 export type GuideRequest = z.infer<typeof guideRequestSchema>;
 

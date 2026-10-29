@@ -72,7 +72,7 @@
 │   ├── errors.ts              # AppError
 │   └── response.ts            # ok() / fail() / withHandler() / parseBody()
 ├── instrumentation.ts         # 서버 시작 시 server/db/init.ts 호출
-├── e2e/                       # 키트 E2E (흐름별 spec S1~S6, 업로드 사진 fixtures/)
+├── e2e/                       # 키트 E2E (흐름별 spec S1~S7, 업로드 사진 fixtures/)
 ├── scripts/                   # check_docs.py, smoke-api.sh, smoke-guide.sh, e2e-local.sh
 ├── docs/                      # problem.yaml, scenarios.yaml, 컨벤션
 ├── Dockerfile
