@@ -2,7 +2,7 @@ import { requireUser } from "@/server/auth/session";
 import { deleteAllHistory, listHistory } from "@/server/history/service";
 import { ok, withHandler } from "@/server/response";
 
-// GET /api/guide-history — 내 도움 기록, 최신순 최대 50개 (S7)
+// GET /api/guide-history — 내 도움 기록, 최신순 최대 50개 (S5, S6)
 export const GET = withHandler(async () => {
   const user = await requireUser();
   return ok(await listHistory(user.id));

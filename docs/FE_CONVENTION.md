@@ -13,7 +13,7 @@
 - 서비스: 부모님 화면을 AI가 보고, 눌러야 할 버튼을 빨간 테두리로 짚어주는 도우미 (`docs/problem.yaml`)
   - 화면 공유(`getDisplayMedia`) → 캡처 → `/api/...`로 전송 → 다음 단계 안내 + 버튼 좌표 수신 → 작은 떠 있는 창(Document Picture-in-Picture)에 표시
 - 구조: **Next.js 풀스택 하나** (레포 루트). FE 화면과 BE API가 같은 앱, 같은 포트(3000)
-  - FE 담당: `app/`의 화면, `components/`, `lib/` / BE 담당: `app/api/`, `server/`, `prisma/`
+  - FE 담당: `app/`의 화면, `components/`, `lib/` / BE 담당: `app/api/`, `server/`, `instrumentation.ts`
 - 지원 환경: **PC 크롬·엣지 최신 버전만** (모바일 미지원) → `docs/scenarios.yaml`의 platform은 `desktop`, E2E 설정에서 mobile project는 뺌. PC 화면 크기(1440×900)에서 깨지지 않아야 함
 - 레포: https://github.com/dlrkawo/sumtech2026-team13 (기본 브랜치 `main`)
 - 코드트리 사이트와 연동 → 커밋 기록으로 기여도 집계 (git 이메일 = 깃허브 계정 이메일)
@@ -132,7 +132,7 @@ E2E는 `getByRole` / `getByLabel`로 화면 글자를 찾아 조작합니다.
 ## 6. API 호출 (API_CONVENTION.md 준수)
 
 - API는 **상대 경로**로 호출: `/api/guides`. BE 주소 환경변수·`localhost:3000` 같은 절대 주소 금지 (키트 규칙)
-- 경로는 `/api/`로 시작하는 kebab-case 복수 명사 (예: `/api/guide-sessions/12`). `/__health`는 FE가 호출하지 않음
+- 경로는 `/api/`로 시작하는 kebab-case 복수 명사 (예: `/api/guide-history`, `/api/voice-guides`). `/__health`는 FE가 호출하지 않음
 - JSON 필드·쿼리 파라미터는 BE와 동일하게 **camelCase 그대로** 사용 (변환 금지)
 - 본문은 **모두 JSON**. 화면 이미지도 data URL(base64) 문자열로 JSON의 `image` 필드에 넣음 (API_CONVENTION.md 2번 「화면 이미지 보내기」, 아래 8번)
 - 공통 응답 처리는 `client.ts`에서 한 번에:
