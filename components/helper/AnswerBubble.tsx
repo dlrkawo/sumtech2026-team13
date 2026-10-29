@@ -3,7 +3,7 @@ import type { GuideResponse, GuideStatus } from "@/server/guide/schema";
 import { BubbleNotice } from "./BubbleNotice";
 import { ScreenPreview } from "./ScreenPreview";
 import { BUTTON_SECONDARY, FOCUS_RING } from "./styles";
-import type { HelperNotice } from "./useHelperSession";
+import type { HelperNotice, ScreenSource } from "./useHelperSession";
 
 // 캐릭터 위 말풍선. 안내 문장·누를 곳 사진·위험 경고를 본 화면에 띄운다 (E2E는 본 화면에서 확인)
 // 보여 줄 내용은 모두 props로 받는다. 안내 값 모양은 서버의 GuideResponse 그대로다.
@@ -32,8 +32,15 @@ export interface AnswerBubbleProps {
   onRetry: () => void;
   onClose: () => void;
   hasPhoto: boolean;
+  // 지금 물어볼 때 쓰는 화면. 공유와 사진이 둘 다 있을 때 어느 쪽으로 묻는지 알 수 있게 보여 준다
+  source: ScreenSource | null;
   onPickPhoto: (file: File) => void;
 }
+
+const SOURCE_LABEL: Record<ScreenSource, string> = {
+  share: "화면 공유로 보고 있어요",
+  photo: "올린 사진으로 물어봐요",
+};
 
 export function AnswerBubble({
   title,
@@ -48,6 +55,7 @@ export function AnswerBubble({
   onRetry,
   onClose,
   hasPhoto,
+  source,
   onPickPhoto,
 }: AnswerBubbleProps) {
   const isRisk = !isLoading && guide?.risk != null;
@@ -102,6 +110,7 @@ export function AnswerBubble({
         </button>
       </div>
       <div className="flex max-h-[44dvh] flex-col gap-[10px] [&>*]:shrink-0 overflow-y-auto px-[18px] pt-[12px] pb-[16px] text-[20px] sm:max-h-[56dvh] xl:max-h-[70dvh] xl:px-[24px]">
+        {source && <p className="text-[20px] font-bold text-[#454B53]">{SOURCE_LABEL[source]}</p>}
         {isLoading && (
           <div className="flex items-center gap-[12px]">
             <span

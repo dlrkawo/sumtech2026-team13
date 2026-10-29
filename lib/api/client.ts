@@ -21,6 +21,7 @@ export async function request<T>(path: `/api/${string}`, init?: RequestInit): Pr
       res.status,
       body?.code ?? "INTERNAL_SERVER_ERROR",
       body?.message ?? "잠시 후 다시 시도해 주세요.",
+      body?.retryable,
     );
   }
   return body.data;
