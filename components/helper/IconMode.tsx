@@ -68,52 +68,54 @@ export function IconMode(props: IconModeProps) {
       </div>
       {/* 왼쪽 소개 영역(Landing)과 짝을 이루는 오른쪽 안내·조작 영역.
           처음엔 캐릭터(+설정)만 보이고, 캐릭터를 누르면 안내·시작/멈추기·입력창이 그 아래로 펼쳐진다.
-          좁을 때는 Landing 아래로 이어지는 한 화면(세로형), sm부터는 Landing 폭(300px)만큼 오른쪽에 고정(가로형) */}
+          좁을 때는 Landing 아래로 이어지는 한 화면(세로형), sm부터는 Landing 폭(300px)만큼 오른쪽에 고정(가로형).
+          가로형에서는 캐릭터·말풍선을 남은 공간 가운데(my-auto)에 두고 입력창은 바닥에 붙인다(sticky).
+          justify-center 대신 my-auto를 쓰는 건, 말풍선이 길어져 넘칠 때 위쪽이 잘리지 않고 스크롤되게 하려는 것 */}
       <div
         className="z-30 flex w-full flex-col items-center gap-[14px] overflow-y-auto px-[16px] pt-[6px] pb-[20px]
-          sm:fixed sm:inset-y-0 sm:left-[300px] sm:right-0 sm:w-auto sm:items-center sm:justify-center sm:gap-[18px] sm:px-[28px] sm:py-[24px]"
+          sm:fixed sm:inset-y-0 sm:left-[300px] sm:right-0 sm:w-auto sm:items-center sm:gap-[18px] sm:px-[28px] sm:pt-[24px] sm:pb-0"
       >
-        <div className="flex flex-wrap items-center justify-center gap-[14px]">
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              aria-label={props.isBubbleOpen ? "곁길 도우미 닫기" : "곁길 도우미 열기"}
-              aria-expanded={props.isBubbleOpen}
-              onClick={() => props.onToggleBubble(!props.isBubbleOpen)}
-              className={`rounded-[24px] drop-shadow-[0_8px_12px_rgba(0,0,0,.22)] ${FOCUS_RING}`}
-            >
-              <PetChar mood={mood} sign={sign} size={88} />
-            </button>
-            {/* '설정' 버튼은 항상 보인다 (scenarios.yaml 화면 흐름). 캐릭터와 같은 무게로 나란히 두지 않고
-                캐릭터 모서리에 붙는 작은 배지로 둬서 평소엔 눈에 덜 띄게 한다 (밝기 아이콘처럼 안 보이게 톱니바퀴 모양 사용) */}
-            <button
-              type="button"
-              aria-label="설정"
-              onClick={props.onOpenSettings}
-              className={`absolute -right-[4px] -bottom-[4px] flex h-[32px] w-[32px] items-center justify-center rounded-full border-2 border-[#C9C6BE] bg-white text-[#16191D] shadow-[0_4px_10px_rgba(0,0,0,.18)] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
-              </svg>
-            </button>
+        <div className="flex w-full flex-col items-center gap-[14px] sm:my-auto sm:gap-[18px]">
+          <div className="flex flex-wrap items-center justify-center gap-[14px]">
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                aria-label={props.isBubbleOpen ? "곁길 도우미 닫기" : "곁길 도우미 열기"}
+                aria-expanded={props.isBubbleOpen}
+                onClick={() => props.onToggleBubble(!props.isBubbleOpen)}
+                className={`rounded-[24px] drop-shadow-[0_8px_12px_rgba(0,0,0,.22)] ${FOCUS_RING}`}
+              >
+                <PetChar mood={mood} sign={sign} size={88} />
+              </button>
+              {/* '설정' 버튼은 항상 보인다 (scenarios.yaml 화면 흐름). 캐릭터와 같은 무게로 나란히 두지 않고
+                  캐릭터 모서리에 붙는 작은 배지로 둬서 평소엔 눈에 덜 띄게 한다 (밝기 아이콘처럼 안 보이게 톱니바퀴 모양 사용) */}
+              <button
+                type="button"
+                aria-label="설정"
+                onClick={props.onOpenSettings}
+                className={`absolute -right-[4px] -bottom-[4px] flex h-[32px] w-[32px] items-center justify-center rounded-full border-2 border-[#C9C6BE] bg-white text-[#16191D] shadow-[0_4px_10px_rgba(0,0,0,.18)] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z" />
+                </svg>
+              </button>
+            </div>
+            {props.isBubbleOpen && (
+              <ControlPill status={status} isOn={props.isOn} onPlay={props.onStart} onStop={props.onStop} />
+            )}
           </div>
-          {props.isBubbleOpen && (
-            <ControlPill status={status} isOn={props.isOn} onPlay={props.onStart} onStop={props.onStop} />
-          )}
+          {props.isBubbleOpen && <AnswerBubble {...bubble} />}
         </div>
         {props.isBubbleOpen && (
-          <>
-            <AnswerBubble {...bubble} />
-            <div className="w-full max-w-[420px] sm:max-w-none">
-              <PromptBar
-                question={props.question}
-                isAnswering={props.isAnswering}
-                voice={props.voice}
-                onQuestionChange={props.onQuestionChange}
-                onAsk={props.onAsk}
-              />
-            </div>
-          </>
+          <div className="w-full max-w-[420px] sm:sticky sm:bottom-0 sm:max-w-none sm:pb-[24px]">
+            <PromptBar
+              question={props.question}
+              isAnswering={props.isAnswering}
+              voice={props.voice}
+              onQuestionChange={props.onQuestionChange}
+              onAsk={props.onAsk}
+            />
+          </div>
         )}
       </div>
     </>
