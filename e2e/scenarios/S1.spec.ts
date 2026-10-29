@@ -1,14 +1,24 @@
 import { expect, test } from "@playwright/test"
 
-test("S1: 도움받을 작업을 입력한다", async ({ page }) => {
+// ※ 라벨·버튼 이름은 기획 문서(docs/scenarios.yaml) 기준이다. 실제 화면 문구가 정해지면 같이 맞춘다.
+
+test("S1 가입하고 설정 창에 들어간다", async ({ page }) => {
+  // 같은 DB에서 여러 번 돌아도 겹치지 않도록 실행마다 다른 이메일로 가입한다
+  const email = `e2e-${Date.now()}@example.com`
+
+  // 1. 사이트에 접속한다
   await page.goto("/")
 
-  // 1. 첫 화면의 '하고 싶은 작업을 입력하세요' 칸에 작업을 입력한다
-  await page.getByLabel("하고 싶은 작업을 입력하세요").fill("병원 예약 방법을 알고 싶어요")
-  // 2. '다음' 버튼을 누른다
-  await page.getByRole("button", { name: "다음" }).click()
+  // 2. '가입하기'를 누른다
+  await page.getByRole("button", { name: "가입하기" }).click()
 
-  // expected: 입력한 작업 요약과 '화면을 공유해 주세요' 안내가 보인다
-  await expect(page.getByText("병원 예약 방법을 알고 싶어요")).toBeVisible()
-  await expect(page.getByText("화면을 공유해 주세요")).toBeVisible()
+  // 3. 이메일과 비밀번호를 입력한다
+  await page.getByLabel("이메일").fill(email)
+  await page.getByLabel("비밀번호").fill("loopthon-2026")
+
+  // 4. '가입' 버튼을 누른다
+  await page.getByRole("button", { name: "가입", exact: true }).click()
+
+  // expected: 설정 창이 열리고 '도움 시작하기' 버튼이 보인다
+  await expect(page.getByRole("button", { name: "도움 시작하기" })).toBeVisible()
 })
