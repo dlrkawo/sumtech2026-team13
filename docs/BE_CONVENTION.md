@@ -20,12 +20,18 @@
 - 앱은 컨테이너 안 3000 포트에서 받음. 코드에 `localhost:3000` 같은 절대 주소 금지 (API 호출은 `/api/...` 상대 경로)
 - 빌드는 Dockerfile에서 끝내고, 시작 명령은 서버 실행만
 - 빈 DB에서 `docker compose up --build` 하나로 앱과 시드 데이터가 2분 안에 떠야 함
-- `GET /__health`는 인증·리다이렉트 없이 200, 실제 배포 commit을 releaseId로 응답
+  - 시작 명령이 서버 실행만이므로, **마이그레이션·시드는 서버가 시작될 때 앱 코드에서 자동 실행**(이미 있으면 건너뜀). 구체 방식은 3단계에서 키트 `docker-compose.example.yml` 확인 후 확정
+- `GET /__health`는 인증·리다이렉트 없이 200, 실제 배포 commit을 releaseId로 응답 (docker 앱·배포 둘 다)
   - 파일 위치: `app/%5F%5Fhealth/route.ts` (Next.js는 `_`로 시작하는 폴더를 라우트로 쓰지 않기 때문)
-- 환경변수 이름은 키트 그대로: `RELEASE_ID`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `AI_GATEWAY_API_KEY` (+ `DATABASE_URL`)
-- 로그인이 있으면 시드 계정(이메일/비밀번호)으로 바로 로그인 가능해야 함
+- 환경변수 이름은 키트 그대로: `RELEASE_ID`, `SEED_USER_EMAIL`, `SEED_USER_PASSWORD`, `AI_GATEWAY_API_KEY`. DB 주소 변수 이름은 키트 compose 템플릿을 따름
+  - compose의 시드 계정 값은 `${}` 없이 직접 적음. 기본값은 `e2e/env.ts`와 같게: `student@example.com` / `loopthon-2026` (역할이 더 있으면 `ta@example.com` 방식으로 추가)
+  - compose `app`에 `AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY:-}`
+- 로그인이 있으면 시드 계정(이메일/비밀번호)으로 바로 로그인 가능, 역할별 권한 검사. 역할 이름은 `docs/scenarios.yaml`의 account와 같게
 - 로그인 안 한 사람이 `/`를 열면 서비스 이름과 하는 일이 보여야 함 (로그인 화면으로 보내지 않음)
+- 로그인 전에는 로그인이 필요한 화면이 열리지 않음 (API는 401)
 - 없는 주소는 404 (500 아님)
+- AI 기능은 E2E에서 실제 응답으로 확인 (가짜 응답 금지), 흐름 하나가 1분 안에 끝나야 함
+- 큰 데이터 파일 커밋 금지, `e2e/fixtures/` 파일은 10MB 이하, `progress.md`에 비밀번호·토큰 금지
 
 ## 2. 기술 스택
 

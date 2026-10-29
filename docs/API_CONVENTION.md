@@ -1,37 +1,32 @@
 # FE ↔ BE API Convention — sumtech 2026 Team 13
 
-> FE와 BE가 API를 주고받을 때 지키는 공통 약속입니다.
-> 레포 루트의 `API_CONVENTION.md`에 두고, 바뀌면 이 파일을 수정한 뒤 디스코드에 공지합니다.
+> FE와 BE가 API를 주고받을 때 지키는 공통 약속입니다. **해커톤 키트 요구사항(`progress.md`)이 이 문서보다 우선합니다.**
+> 바뀌면 이 파일을 수정한 뒤 디스코드에 공지합니다.
 > **Claude 사용 시:** 이 문서 전체를 붙여넣고 "이 API 컨벤션에 맞춰서 작업해줘"라고 요청하세요.
-> (FE는 API 호출 코드를, BE는 응답 코드를 이 규칙에 맞춰 작성하면 됩니다.)
 
 ---
 
 ## 0. 프로젝트 맥락
 
 - sumtech 2026 해커톤 팀 13 (PM 1, FE 2, BE 2)
-- 결과물: 웹 서비스(웹사이트). FE와 BE는 분리되어 REST API(JSON)로만 통신
-- 레포: https://github.com/dlrkawo/sumtech2026-team13 (`/frontend`, `/backend`)
-- BE: FastAPI. API 명세는 Swagger(`<BE 주소>/docs`)가 기준
+- 서비스: 화면을 공유하면 AI가 현재 화면을 분석해 어디를 누를지 단계별로 안내
+- 구조: **Next.js 풀스택 하나** (레포 루트). FE 화면과 BE API가 같은 앱, 같은 포트(3000)
+  - FE 담당: `app/`의 화면, `components/` / BE 담당: `app/api/`, `server/`, `prisma/`
+- 레포: https://github.com/dlrkawo/sumtech2026-team13
 
-## 1. 주소와 환경변수
+## 1. 주소
 
-| 구분 | BE 주소 |
-|---|---|
-| 로컬 | `http://localhost:8000` |
-| 배포 | (배포 후 BE가 기입) |
-
-- 모든 API는 `/api/v1`로 시작합니다. 예: `GET http://localhost:8000/api/v1/posts`
-- FE는 BE 주소를 코드에 직접 쓰지 않고 환경변수로 관리합니다.
-  - Vite: `VITE_API_BASE_URL` / Next.js: `NEXT_PUBLIC_API_BASE_URL`
-- FE 로컬 포트와 배포 주소는 FE가 아래에 기입합니다. BE가 CORS 허용 목록에 추가합니다.
-  - FE 로컬: (예: `http://localhost:5173`) / FE 배포: (기입)
+- FE는 API를 **상대 경로**로 호출합니다: `fetch("/api/guides")`
+  - 같은 앱이라 BE 주소 환경변수와 CORS 설정이 필요 없음
+  - `http://localhost:3000` 같은 절대 주소를 코드에 쓰지 않음 (키트 규칙)
+- 모든 API는 `/api/`로 시작, 경로는 kebab-case 복수 명사 (예: `/api/guide-sessions/12`)
+- 헬스체크 `GET /__health`는 키트용이며 FE가 호출하지 않음
 
 ## 2. 요청/응답 기본
 
-- 요청·응답 본문은 JSON (`Content-Type: application/json`). 파일 업로드만 `multipart/form-data`
-- **JSON 필드명은 camelCase** (예: `userId`, `createdAt`). URL 경로는 kebab-case 복수 명사 (예: `/api/v1/study-groups`)
-- 쿼리 파라미터도 camelCase (예: `?sortBy=createdAt`)
+- 본문은 JSON. 화면 이미지 업로드만 `multipart/form-data`
+- JSON 필드와 쿼리 파라미터는 camelCase (예: `sessionId`, `?sortBy=createdAt`)
+- FE에서 쓸 요청·응답 타입은 BE가 `server/<domain>/schema.ts`에 zod로 정의하고 `export type`으로 내보냄 → FE는 `import type`으로 가져와 사용 (타입만 가져오므로 서버 코드가 브라우저로 섞이지 않음)
 
 ## 3. 공통 응답 형식
 
@@ -42,86 +37,83 @@
 
 실패:
 ```json
-{ "success": false, "data": null, "message": "사용자를 찾을 수 없습니다.", "code": "USER_NOT_FOUND" }
+{ "success": false, "data": null, "message": "안내 기록을 찾을 수 없습니다.", "code": "SESSION_NOT_FOUND" }
 ```
 
-- FE는 실제 데이터를 항상 `response.data`(응답 본문의 `data` 필드)에서 꺼냅니다.
+- FE는 실제 데이터를 항상 응답 본문의 `data`에서 꺼냅니다.
 - 삭제 성공(204)은 본문이 없습니다.
 
 ## 4. 에러 처리
 
-- FE는 **HTTP 상태 코드로 큰 분기**, **`code`로 세부 분기**를 합니다.
-- `message`는 사용자에게 그대로 보여줘도 되는 한국어 문장으로 BE가 작성합니다.
+- FE는 **HTTP 상태 코드로 큰 분기**, **`code`로 세부 분기**
+- `message`는 화면에 그대로 보여줘도 되는 한국어 문장 (BE 작성)
 
 | 상태 | 의미 | FE 처리 예시 |
 |---|---|---|
-| 400 | 잘못된 요청 (`VALIDATION_ERROR` 등) | 입력 폼에 `message` 표시 |
-| 401 | 로그인 필요 / 토큰 만료 | 토큰 삭제 후 로그인 페이지 이동 |
+| 400 | 잘못된 요청 (`VALIDATION_ERROR` 등) | 입력 칸 근처에 `message` 표시 |
+| 401 | 로그인 필요 | 로그인 화면으로 이동 |
 | 403 | 권한 없음 | 안내 메시지 |
 | 404 | 대상 없음 | "없는 페이지" 처리 |
 | 409 | 중복 (이메일 중복 등) | `message` 표시 |
-| 500 | 서버 오류 | "잠시 후 다시 시도해주세요" 공통 메시지 |
+| 429/503 | AI 사용량 초과·일시 불가 (`AI_*`) | "잠시 후 다시 시도해주세요" + 다시 시도 버튼 |
+| 500 | 서버 오류 | 공통 오류 메시지 |
 
-- 에러 코드 목록은 BE의 `backend/CONVENTION.md` 12번에 계속 추가됩니다.
+- 에러 코드 목록: `docs/BE_CONVENTION.md` 12번
 
 ## 5. 데이터 형식
 
 | 항목 | 규칙 | 예시 |
 |---|---|---|
-| ID | 숫자(int) | `"id": 12` |
+| ID | 숫자 | `"id": 12` |
 | 날짜·시간 | ISO 8601, 타임존 포함 | `"createdAt": "2026-10-29T18:00:00+09:00"` |
-| 날짜만 | `YYYY-MM-DD` | `"birthDate": "2000-01-01"` |
-| boolean | `is`/`has` 접두사 | `isLiked`, `hasNext` |
+| boolean | `is`/`has` 접두사 | `isDone`, `hasNext` |
 | enum(상태값) | UPPER_SNAKE_CASE 문자열 | `"status": "IN_PROGRESS"` |
-| 빈 목록 | `null` 말고 `[]` | `"tags": []` |
-| 값 없음 | 필드는 유지하고 `null` | `"profileImageUrl": null` |
-| 금액·수량 | 숫자 (문자열 금지) | `"price": 15000` |
+| 빈 목록 | `[]` (null 금지) | `"steps": []` |
+| 값 없음 | 필드 유지 + `null` | `"imageUrl": null` |
+| 화면 좌표 | 이미지 기준 0~1 비율 | `"box": { "x": 0.82, "y": 0.05, "width": 0.1, "height": 0.06 }` |
 
-- enum 값의 종류는 API 명세에 적어두고, 화면 표시용 한글 변환은 FE가 담당합니다.
+- 화면 좌표를 비율로 주면 FE가 화면 크기와 상관없이 강조 표시를 그릴 수 있습니다.
+- enum 값의 종류는 API 목록에 적고, 화면 표시용 한글 변환은 FE가 담당합니다.
 
 ## 6. 목록 조회와 페이지네이션
 
-요청: `GET /api/v1/posts?page=1&size=20` (page는 1부터)
+요청: `GET /api/guide-sessions?page=1&size=20` (page는 1부터)
 
 응답의 `data`:
 ```json
-{
-  "items": [ ],
-  "page": 1,
-  "size": 20,
-  "totalCount": 135,
-  "hasNext": true
-}
+{ "items": [ ], "page": 1, "size": 20, "totalCount": 135, "hasNext": true }
 ```
 
-- 페이지네이션이 필요 없는 짧은 목록은 `data`에 배열을 바로 넣습니다. 어느 쪽인지는 API 명세에 표시합니다.
+- 짧은 목록은 `data`에 배열을 바로 넣고, 어느 쪽인지 API 목록에 표시합니다.
 
 ## 7. 인증 (로그인이 필요한 경우)
 
-- 로그인 성공 시 BE가 `data.accessToken`을 반환합니다.
-- FE는 토큰을 저장(해커톤에서는 localStorage 허용)하고, 인증이 필요한 요청마다 헤더에 붙입니다.
-  ```
-  Authorization: Bearer <accessToken>
-  ```
-- 토큰이 없거나 만료되면 BE는 401 + `AUTH_INVALID_TOKEN`을 반환합니다.
-- 로그인 기능이 없으면 이 항목은 건너뜁니다.
+- 같은 앱이므로 **httpOnly 쿠키 세션**을 씁니다. FE는 토큰을 저장하거나 헤더에 붙이지 않음
+- 로그인: `POST /api/auth/login` `{ email, password }` → 성공 시 BE가 쿠키 설정
+- 로그아웃: `POST /api/auth/logout` / 내 정보: `GET /api/auth/me`
+- 로그인이 필요한 API에 쿠키가 없으면 401 + `AUTH_REQUIRED`
+- 시드 계정(`SEED_USER_EMAIL`/`SEED_USER_PASSWORD`)으로 바로 로그인 가능해야 함 (키트 E2E)
 
-## 8. 파일 업로드 (필요한 경우)
+## 8. 화면 이름과 E2E (키트 규칙)
 
-- `multipart/form-data`, 파일 필드명은 `file` (여러 개면 `files`)
-- 응답 `data`에 접근 가능한 URL을 반환: `{ "url": "https://..." }`
+- E2E는 `docs/scenarios.yaml`의 메뉴·버튼 이름으로 화면을 조작합니다.
+- FE는 버튼·메뉴 글자를 scenarios.yaml과 똑같이 맞추고, 바꾸면 scenarios.yaml과 spec도 같은 commit에서 수정
+- E2E에 필요한 선행 데이터는 BE가 `prisma/seed.ts`로 준비, 업로드용 이미지는 `e2e/fixtures/`에 커밋 (파일당 10MB 이하)
+- E2E는 실제 앱과 실제 AI 응답으로 돌기 때문에 가짜 응답(목업)으로 통과시키지 않음. 목업은 개발 중에만 사용
+- 주 사용 플랫폼(desktop / mobile / both)은 scenarios.yaml에서 정하고, 그 화면 크기(PC 1440×900, 모바일 390×844)에서 화면이 깨지지 않아야 함
+- 로그인 전에는 로그인이 필요한 화면이 열리지 않아야 하고, 없는 주소는 404 화면
 
 ## 9. 협업 절차
 
-1. **명세 먼저:** BE가 Swagger에 엔드포인트와 요청·응답 스키마를 먼저 만들어 공유합니다. 구현 전이어도 됩니다.
-2. **FE 병행 작업:** FE는 명세의 응답 예시로 목업 데이터를 만들어 화면을 먼저 개발합니다.
-3. **변경 공지:** 필드 이름, 타입, URL이 바뀌면 BE가 디스코드에 변경 전과 후를 공지합니다. 예: `[API 변경] GET /posts : writer → author`
-4. **요청 방법:** FE에 필요한 필드나 API가 있으면 디스코드에 "화면 이름 + 필요한 데이터"로 요청합니다.
-5. **연동 확인:** 연동 중 문제가 생기면 요청 URL, 보낸 값, 받은 응답(또는 콘솔 에러)을 같이 공유합니다.
+1. **명세 먼저:** BE가 아래 10번에 API를 적고, `schema.ts`에 타입을 먼저 만들어 push (구현 전이어도 됨)
+2. **FE 병행 작업:** FE는 타입과 응답 예시로 목업을 만들어 화면을 먼저 개발
+3. **변경 공지:** 필드·타입·URL이 바뀌면 BE가 디스코드에 변경 전/후 공지. 예: `[API 변경] POST /api/guides : answer → steps`
+4. **요청 방법:** FE가 필요한 데이터는 디스코드에 "화면 이름 + 필요한 데이터"로 요청
+5. **연동 문제 공유:** 요청 URL, 보낸 값, 받은 응답(또는 콘솔 에러)을 같이 공유
 
 ## 10. API 목록 (진행 현황)
 
-| 기능 | 메서드 | URL | 담당 BE | 상태 |
-|---|---|---|---|---|
-| 헬스체크 | GET | `/api/v1/health` | | 명세 / 구현 / 배포 |
-| (추가) | | | | |
+| 기능 | 메서드 | URL | 로그인 | 담당 BE | 상태 |
+|---|---|---|---|---|---|
+| 헬스체크 (키트) | GET | `/__health` | 불필요 | | 명세 / 구현 / 배포 |
+| (features 확정 후 추가) | | | | | |
