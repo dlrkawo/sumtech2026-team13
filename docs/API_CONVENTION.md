@@ -37,7 +37,7 @@
 - 필드 `image`: **data URL 문자열** (`data:image/jpeg;base64,...`). FE는 캔버스의 `toDataURL("image/jpeg", 0.7)` 결과를 그대로 넣음
 - 화면 공유 캡처와 "화면 사진 올리기"(파일 선택, E2E용) 모두 **캔버스로 다시 그려서 같은 형식**으로 보냄
 - FE는 보내기 전에 **가로 최대 1280px, JPEG 품질 0.7**로 줄임 (원본 전송 금지)
-- 허용 형식: JPEG, PNG, WEBP / BE는 data URL 형식과 크기를 zod로 검사하고, 문자열 기준 **4MB 초과면 400 `IMAGE_TOO_LARGE`**, 형식이 틀리면 400 `IMAGE_INVALID`
+- 허용 형식: JPEG, PNG, WEBP / BE는 data URL 형식과 크기를 zod로 검사하고, 문자열 기준 **3MB 초과면 400 `IMAGE_TOO_LARGE`** (Vercel 함수 요청 본문 한도 4.5MB 안에 여유를 둔 값), 형식이 틀리면 400 `IMAGE_INVALID`
 - 이유: AI 이미지 입력이 base64를 받으므로 BE가 변환할 필요가 없고, 다른 API처럼 JSON 하나로 zod 검증 가능. 1280px·JPEG 0.7이면 수백 KB 수준
 
 ## 3. 공통 응답 형식
@@ -136,11 +136,12 @@
 | 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 새로고침 시 로그인 유지 | 명세 |
 | 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 명세 |
 | 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 명세 |
-| 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 명세 |
+| 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 명세 |
 | 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` (최신순, 최대 50개) | 필요 | 이감재 | S7 | 명세 |
 | 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 개인정보 보호 | 명세 |
 
 - 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`
 - 설정 기본값: 화면 가장자리 표시 켜짐, 음성 인식 꺼짐, 누를 곳 표시 `BORDER`, 위험 경고 켜짐, 기록 저장 켜짐 (`DEFAULT_SETTINGS`)
+- `POST /api/guides`의 `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 다음 단계를 이어서 판단한다
 - `POST /api/guides`는 기록 저장 설정이 켜져 있으면 질문·안내 문장만 도움 기록에 남긴다 (화면 이미지는 저장하지 않음)
 - 상태: 명세(타입 확정) → 구현 → 배포
