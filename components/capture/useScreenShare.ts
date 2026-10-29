@@ -16,6 +16,28 @@ const UNSUPPORTED: ScreenShareError = {
   message: "이 브라우저에서는 화면 보기를 할 수 없어요. PC의 크롬이나 엣지에서 열어 주세요.",
 };
 
+// 크롬·엣지의 CaptureController (TypeScript 기본 타입에 아직 없어 쓰는 부분만 적는다)
+interface FocusCaptureController {
+  setFocusBehavior(behavior: "focus-captured-surface" | "no-focus-change"): void;
+}
+
+function createCaptureController(): FocusCaptureController | undefined {
+  const Ctor = (window as unknown as { CaptureController?: new () => FocusCaptureController }).CaptureController;
+  return Ctor ? new Ctor() : undefined;
+}
+
+// 탭·창을 공유해도 곁길 탭에 머문다 (크롬 기본은 공유한 탭으로 넘어감).
+// 공유가 시작된 직후에만 부를 수 있고, 화면 전체 공유에는 해당하지 않는다
+function stayOnThisTab(controller: FocusCaptureController | undefined, stream: MediaStream) {
+  const surface = stream.getVideoTracks()[0]?.getSettings().displaySurface;
+  if (!controller || (surface !== "browser" && surface !== "window")) return;
+  try {
+    controller.setFocusBehavior("no-focus-change");
+  } catch (e) {
+    console.error("[useScreenShare] 공유 후 탭 유지 실패", e);
+  }
+}
+
 function toShareError(e: unknown): ScreenShareError {
   const name = e instanceof DOMException ? e.name : "";
   // 고르기 창에서 '취소'를 누르거나 권한을 막은 경우
@@ -62,7 +84,10 @@ export function useScreenShare() {
     isStartingRef.current = true;
     setStatus("starting");
     try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const controller = createCaptureController();
+      const options = { video: true, audio: false, ...(controller && { controller }) } as DisplayMediaStreamOptions;
+      const stream = await navigator.mediaDevices.getDisplayMedia(options);
+      stayOnThisTab(controller, stream);
       // 고르는 사이 화면을 떠났으면(로그아웃 등) 바로 정리한다
       if (!isMountedRef.current) {
         stream.getTracks().forEach((track) => track.stop());
