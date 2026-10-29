@@ -1,0 +1,6 @@
+// 화면 이미지 보내기 규칙 (API_CONVENTION.md 2번 「화면 이미지 보내기」)
+export const MAX_IMAGE_WIDTH = 1280;
+export const JPEG_QUALITY = 0.7;
+// data URL 문자열 기준. 넘으면 BE가 400 IMAGE_TOO_LARGE를 주므로 보내기 전에 막는다
+export const MAX_IMAGE_DATA_URL_LENGTH = 4 * 1024 * 1024;
+export const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
