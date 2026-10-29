@@ -5,11 +5,11 @@ export function StatusIcon({ status }: { status: HelperStatus }) {
   if (status === "answering") {
     // E2E: getByRole("img", { name: "답변 중" })
     return (
-      <span role="img" aria-label="답변 중" className="flex h-[30px] items-center gap-[5px]">
+      <span role="img" aria-label="답변 중" className="flex h-[22px] items-center gap-[4px]">
         {[0, 150, 300].map((delay) => (
           <span
             key={delay}
-            className="block h-[9px] w-[9px] animate-bounce rounded-full bg-current motion-reduce:animate-none"
+            className="block h-[7px] w-[7px] animate-bounce rounded-full bg-current motion-reduce:animate-none"
             style={{ animationDelay: `${delay}ms` }}
           />
         ))}
@@ -19,8 +19,8 @@ export function StatusIcon({ status }: { status: HelperStatus }) {
   if (status === "watching" || status === "waiting") {
     return (
       <svg
-        width="30"
-        height="30"
+        width="22"
+        height="22"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -33,7 +33,7 @@ export function StatusIcon({ status }: { status: HelperStatus }) {
     );
   }
   return (
-    <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
       <rect x="6.5" y="5" width="3.8" height="14" rx="1" fill="currentColor" />
       <rect x="13.7" y="5" width="3.8" height="14" rx="1" fill="currentColor" />
     </svg>
