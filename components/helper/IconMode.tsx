@@ -56,6 +56,7 @@ export function IconMode(props: IconModeProps) {
     onNext: props.onNext,
     onRetry: props.onRetry,
     onClose: () => props.onToggleBubble(false),
+    hasPhoto: props.hasPhoto,
     onPickPhoto: props.onPickPhoto,
   };
 
@@ -129,7 +130,7 @@ function bubbleTitle(status: HelperStatus): string {
 }
 
 function idleText(p: IconModeProps): string {
-  if (!p.isOn) return "▶를 누르면 화면 보기를 시작해요.";
+  if (!p.isOn) return "▶를 누르거나, ‘사진 올리기’로 지금 화면 사진을 올려 주세요.";
   if (p.hasScreen) return "하고 싶은 일을 아래 칸에 적고 ‘물어보기’를 눌러 주세요.";
   return "브라우저 창에서 보여 줄 화면을 골라 주세요.";
 }

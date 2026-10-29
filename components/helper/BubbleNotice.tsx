@@ -15,7 +15,7 @@ export function BubbleNotice({ notice }: { notice: HelperNotice }) {
   return (
     <>
       <p className="text-[22px] font-bold">{notice.reason ?? "화면을 함께 보지 못하고 있어요."}</p>
-      <p className={MUTED}>아래 ‘사진 올리기’로 지금 화면 사진을 올리면 도와드릴게요.</p>
+      <p className={MUTED}>위 ‘사진 올리기’로 지금 화면 사진을 올리면 도와드릴게요.</p>
     </>
   );
 }

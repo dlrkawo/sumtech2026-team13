@@ -10,7 +10,7 @@ import { DEFAULT_SETTINGS, type SettingsResponse } from "@/server/settings/schem
 // 가짜 값은 여기서만 만들고 IconMode에는 props로 넘긴다 (컴포넌트 안에는 가짜 데이터를 두지 않는다)
 export function HelperPreview({ mock, image }: { mock: string; image: string }) {
   const [isBubbleOpen, setBubbleOpen] = useState(true);
-  const [question, setQuestion] = useState("친구에게 만원 보내고 싶어");
+  const [question, setQuestion] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<SettingsResponse>(DEFAULT_SETTINGS);
   const guide = MOCK_GUIDE_EXAMPLES[mock] ?? null;
