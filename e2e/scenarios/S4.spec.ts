@@ -2,19 +2,14 @@ import path from "node:path"
 import { expect, test, type Page } from "@playwright/test"
 import { E2E_USER_EMAIL, E2E_USER_PASSWORD } from "../env"
 
-// ※ 라벨·버튼 이름은 기획 문서(docs/scenarios.yaml) 기준이다. 실제 화면 문구가 정해지면 같이 맞춘다.
-//   아이콘 버튼(▶ ■ 마이크 설정)은 접근성 이름(aria-label)을 아래 이름과 같게 둔다.
-//   화면은 '화면 사진 올리기'(파일 선택)로 e2e/fixtures/의 모의 화면 사진을 올려 얻는다(공유 선택 창 대신 setInputFiles).
-//   AI 응답을 기다리는 확인은 시간을 넉넉히 준다(AI_WAIT).
+// ※ 라벨·버튼 이름은 docs/scenarios.yaml 기준이다. 화면 문구를 바꾸면 이 spec도 같은 커밋에서 고친다.
+//   mock-unclear.png는 모의 병원 예약의 '개인정보 입력' 화면('제출' 버튼)이다.
+//   경고 문구는 AI가 가리킨 버튼이 제출·결제·삭제 같은 되돌리기 어려운 버튼일 때 앱이 항상 같은 글자로 띄운다.
 
 const AI_WAIT = { timeout: 60_000 }
 const fixture = (name: string) => path.join(__dirname, "../fixtures", name)
 
-
-/**
- * 로그인은 화면으로 한다. 시드 계정은 docker-compose.yml의 SEED_USER_EMAIL·SEED_USER_PASSWORD.
- * 첫 화면(설정 창 형태의 가입/로그인 화면)에서 이메일·비밀번호를 넣고 로그인하면 설정 창이 열린다.
- */
+/** account: 사용자 — 시드 계정(docker-compose.yml의 SEED_USER_*)으로 첫 화면에서 로그인한다. */
 async function logIn(page: Page) {
   await page.goto("/")
   await page.getByLabel("이메일").fill(E2E_USER_EMAIL)
@@ -23,24 +18,23 @@ async function logIn(page: Page) {
   await expect(page.getByRole("button", { name: "도움 시작하기" })).toBeVisible()
 }
 
-test("S4 화면 사진을 올리고 하고 싶은 일을 물어 누를 곳 안내를 받는다", async ({ page }) => {
-  // 1. 사이트에 접속해 로그인한다
+test("S4 개인정보 제출 버튼 앞에서 경고를 본다", async ({ page }) => {
   await logIn(page)
 
-  // 2. 설정 창에서 '도움 시작하기'를 누른다
+  // 1. 설정 창에서 '도움 시작하기'를 누른다
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
-  // 3. '화면 사진 올리기'를 눌러 병원 예약 시작 화면 사진을 고른다
-  await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-step1.png"))
+  // 2. '화면 사진 올리기'를 눌러 개인정보 입력 화면 사진을 고른다
+  await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-unclear.png"))
 
-  // 4. '질문 입력'에 '병원 예약하고 싶어'를 적는다
-  await page.getByLabel("질문 입력").fill("병원 예약하고 싶어")
+  // 3. '질문 입력'에 '예약 마무리하고 싶어'를 적는다
+  await page.getByLabel("질문 입력").fill("예약 마무리하고 싶어")
 
-  // 5. '물어보기' 버튼을 누른다
+  // 4. '물어보기' 버튼을 누른다
   await page.getByRole("button", { name: "물어보기" }).click()
 
-  // expected: '답변 중' 아이콘이 보이고, 안내 문장과 올린 사진 위에 누를 곳 표시가 나타난다
-  await expect(page.getByRole("img", { name: "답변 중" })).toBeVisible(AI_WAIT)
-  await expect(page.getByTestId("guide-text")).not.toBeEmpty(AI_WAIT)
-  await expect(page.getByTestId("click-highlight")).toBeVisible(AI_WAIT)
+  // expected: '되돌리기 어려운 버튼이에요. 누르기 전에 한 번 더 확인하세요' 경고가 보인다
+  await expect(
+    page.getByText("되돌리기 어려운 버튼이에요. 누르기 전에 한 번 더 확인하세요"),
+  ).toBeVisible(AI_WAIT)
 })
