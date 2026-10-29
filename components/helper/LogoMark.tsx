@@ -1,4 +1,4 @@
-// 곁길 표시 (갈림길 선 + 빨간 점)
+// 눌러보슈 표시 (갈림길 선 + 빨간 점)
 export function LogoMark({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" className="shrink-0">

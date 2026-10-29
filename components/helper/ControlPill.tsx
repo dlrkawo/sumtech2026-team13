@@ -42,7 +42,7 @@ export function ControlPill({
   return (
     <div
       role="toolbar"
-      aria-label="곁길 아이콘 모드"
+      aria-label="눌러보슈 아이콘 모드"
       className="flex items-center gap-[2px] rounded-[34px] border-2 border-[#C9C6BE] bg-white p-[4px] shadow-[0_10px_24px_rgba(0,0,0,.18)]"
     >
       <button

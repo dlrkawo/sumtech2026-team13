@@ -82,11 +82,11 @@ export function IconMode(props: IconModeProps) {
           {/* 세로가 짧은 화면(높이 800px 이하, 예: 1280×720)에서는 '설정'을 캐릭터 옆에 둔다.
               아래에 쌓으면 이 줄이 길어져 안내 말풍선이 줄어들고, 사진·누를 곳이 잘려 보이지 않았다 */}
           <div className="flex shrink-0 flex-col items-center gap-[6px] [@media(max-height:800px)]:flex-row [@media(max-height:800px)]:gap-[14px]">
-            {/* 캐릭터 아래 글자는 scenarios.yaml의 단계 이름("'곁길 도우미 열기'를 누른다")과 같게 보여 준다.
+            {/* 캐릭터 아래 글자는 scenarios.yaml의 단계 이름("'눌러보슈 도우미 열기'를 누른다")과 같게 보여 준다.
                 접근성 이름은 aria-label이 정하므로 글자를 바꿔도 E2E 선택자는 그대로다 */}
             <button
               type="button"
-              aria-label={props.isBubbleOpen ? "곁길 도우미 닫기" : "곁길 도우미 열기"}
+              aria-label={props.isBubbleOpen ? "눌러보슈 도우미 닫기" : "눌러보슈 도우미 열기"}
               aria-expanded={props.isBubbleOpen}
               onClick={() => props.onToggleBubble(!props.isBubbleOpen)}
               className={`flex flex-col items-center gap-[4px] rounded-[24px] px-[10px] pb-[4px] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
@@ -95,7 +95,7 @@ export function IconMode(props: IconModeProps) {
                 <PetChar mood={mood} sign={sign} size={88} />
               </span>
               <span className="text-[20px] leading-[1.2] font-bold text-[#16191D]">
-                {props.isBubbleOpen ? "곁길 도우미 닫기" : "곁길 도우미 열기"}
+                {props.isBubbleOpen ? "눌러보슈 도우미 닫기" : "눌러보슈 도우미 열기"}
               </span>
             </button>
             {/* '설정' 버튼은 항상 보인다 (scenarios.yaml "아이콘 아래 '설정' 버튼").
@@ -147,7 +147,7 @@ function helperStatus(p: IconModeProps): HelperStatus {
 
 function bubbleTitle(status: HelperStatus): string {
   if (status === "answering") return "답변 중";
-  if (status === "stopped") return "곁길";
+  if (status === "stopped") return "눌러보슈";
   return status === "watching" ? "보고 있어요" : "화면 대기";
 }
 

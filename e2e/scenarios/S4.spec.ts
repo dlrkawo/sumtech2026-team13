@@ -28,7 +28,7 @@ test("S4 개인정보 제출 버튼 앞에서 경고를 본다", async ({ page }
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
-  await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
+  await page.getByRole("button", { name: "눌러보슈 도우미 열기" }).click()
 
   await choosePhoto(page, "사진 올리기", "mock-unclear.png")
 
