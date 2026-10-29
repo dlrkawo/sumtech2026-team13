@@ -125,7 +125,22 @@
 
 ## 10. API 목록 (진행 현황)
 
-| 기능 | 메서드 | URL | 로그인 | 담당 BE | 상태 |
-|---|---|---|---|---|---|
-| 헬스체크 (키트) | GET | `/__health` | 불필요 | | 명세 / 구현 / 배포 |
-| (features 확정 후 추가) | | | | | |
+요청·응답 타입은 `server/<domain>/schema.ts`가 기준입니다. FE는 `import type`으로 가져다 씁니다.
+
+| 기능 | 메서드 | URL | 요청 | 응답 `data` | 로그인 | 담당 BE | 흐름 | 상태 |
+|---|---|---|---|---|---|---|---|---|
+| 헬스체크 (키트) | GET | `/__health` | - | `{ releaseId }` (공통 응답 형식 아님) | 불필요 | 이감재 | - | 배포 |
+| 회원가입 | POST | `/api/auth/signup` | `AuthRequest` | `AuthUserResponse` (201, 쿠키 설정) | 불필요 | 이감재 | S1 | 명세 |
+| 로그인 | POST | `/api/auth/login` | `AuthRequest` | `AuthUserResponse` (쿠키 설정) | 불필요 | 이감재 | S2~S8 | 명세 |
+| 로그아웃 | POST | `/api/auth/logout` | - | 204 (쿠키 삭제) | 필요 | 이감재 | - | 명세 |
+| 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 새로고침 시 로그인 유지 | 명세 |
+| 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 명세 |
+| 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 명세 |
+| 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 명세 |
+| 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` (최신순, 최대 50개) | 필요 | 이감재 | S7 | 명세 |
+| 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 개인정보 보호 | 명세 |
+
+- 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`
+- 설정 기본값: 화면 가장자리 표시 켜짐, 음성 인식 꺼짐, 누를 곳 표시 `BORDER`, 위험 경고 켜짐, 기록 저장 켜짐 (`DEFAULT_SETTINGS`)
+- `POST /api/guides`는 기록 저장 설정이 켜져 있으면 질문·안내 문장만 도움 기록에 남긴다 (화면 이미지는 저장하지 않음)
+- 상태: 명세(타입 확정) → 구현 → 배포
