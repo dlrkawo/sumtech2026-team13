@@ -136,13 +136,15 @@
 | 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 새로고침 시 로그인 유지 | 구현 |
 | 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
 | 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` | 필요 | 이감재 | S5, S8 | 구현 |
-| 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 명세 |
+| 화면 분석·안내 | POST | `/api/guides` | `GuideRequest` `{ image, question, previousInstruction? }` | `GuideResponse` `{ instruction, target, risk, status }` | 필요 | hyuckkim | S4, S6 | 구현 |
+| 할 일 목록 | POST | `/api/guide-plans` | `GuidePlanRequest` `{ image, question }` | `GuidePlanResponse` `{ steps, status, hint }` | 필요 | hyuckkim | - (시나리오 없이 기능만) | 명세 |
 | 도움 기록 목록 | GET | `/api/guide-history` | - | `GuideHistoryItem[]` (최신순, 최대 50개) | 필요 | 이감재 | S7 | 구현 |
 | 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 개인정보 보호 | 구현 |
 
-- 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`
+- 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`, `server/guide-plan/schema.ts`
 - 설정 기본값: 화면 가장자리 표시 켜짐, 음성 인식 꺼짐, 누를 곳 표시 `BORDER`, 위험 경고 켜짐, 기록 저장 켜짐 (`DEFAULT_SETTINGS`)
 - `POST /api/guides`의 `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 다음 단계를 이어서 판단한다
+- `POST /api/guide-plans`는 처음에 한 번 보여 주는 참고용 할 일 목록(큰 흐름 3~6개). 몇 번째 단계인지는 추적하지 않고(사이트마다 단계 수가 다름), 화면마다 누를 곳은 `POST /api/guides`가 안내한다. 목록은 저장하지 않는다
 - `POST /api/guides`는 기록 저장 설정이 켜져 있으면 질문·안내 문장만 도움 기록에 남긴다 (화면 이미지는 저장하지 않음)
 - 상태: 명세(타입 확정) → 구현 → 배포
 - 도움 기록 저장: hyuckkim의 `POST /api/guides`는 안내를 만든 뒤 `recordGuideHistory(userId, question, instruction)`(`server/history/service.ts`)을 호출. 위험 경고 여부는 `getSettings(userId).riskWarning`(`server/settings/service.ts`)
