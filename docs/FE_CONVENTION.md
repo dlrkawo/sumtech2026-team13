@@ -14,7 +14,7 @@
   - 화면 공유(`getDisplayMedia`) → 캡처 → `/api/...`로 전송 → 다음 단계 안내 + 버튼 좌표 수신 → 작은 떠 있는 창(Document Picture-in-Picture)에 표시
 - 구조: **Next.js 풀스택 하나** (레포 루트). FE 화면과 BE API가 같은 앱, 같은 포트(3000)
   - FE 담당: `app/`의 화면, `components/`, `lib/` / BE 담당: `app/api/`, `server/`, `prisma/`
-- 지원 환경: **PC 크롬·엣지 최신 버전** 기준. 주 사용 플랫폼은 `docs/scenarios.yaml`의 platform으로 정하고, 그 화면 크기(PC 1440×900)에서 깨지지 않아야 함
+- 지원 환경: **PC 크롬·엣지 최신 버전만** (모바일 미지원) → `docs/scenarios.yaml`의 platform은 `desktop`, E2E 설정에서 mobile project는 뺌. PC 화면 크기(1440×900)에서 깨지지 않아야 함
 - 레포: https://github.com/dlrkawo/sumtech2026-team13 (기본 브랜치 `main`)
 - 코드트리 사이트와 연동 → 커밋 기록으로 기여도 집계 (git 이메일 = 깃허브 계정 이메일)
 
@@ -23,15 +23,15 @@
 | 구분 | 선택 |
 |---|---|
 | 언어 | TypeScript (strict) |
-| 프레임워크 | Next.js (App Router) — BE와 같은 앱 |
-| 스타일 | Tailwind CSS |
+| 프레임워크 | Next.js 16 (App Router) + React 19 — BE와 같은 앱 |
+| 스타일 | Tailwind CSS v4 (`tailwind.config` 없이 `app/globals.css`의 `@theme`에서 설정) |
 | 라우팅 | App Router 파일 기반 (`app/(pages)/.../page.tsx`) |
 | 상태 관리 | React state + Context. 전역 상태가 커지면 Zustand |
 | API 호출 | `fetch` 래퍼 (`lib/api/client.ts`) |
 | 요청·응답 타입 | BE의 `server/<domain>/schema.ts`에서 `import type` |
 | 린트/포맷 | ESLint + Prettier |
 | 패키지 | npm (`package-lock.json` 커밋) |
-| 실행·배포 | Docker(`docker compose up --build`) + 공개 HTTPS 주소 (BE 담당). 화면 공유 API는 HTTPS 또는 localhost에서만 동작 |
+| 실행·배포 | 로컬 `npm run dev` / Docker(`docker compose up --build`) + 공개 HTTPS 배포(Vercel) (BE 담당). 화면 공유 API는 HTTPS 또는 localhost에서만 동작 |
 
 ## 2. 폴더 구조
 
@@ -69,8 +69,8 @@
   - `lib/`는 FE 두 명이 같이 쓰는 브라우저용 코드(API 래퍼, 이미지 유틸, 상수) 자리입니다. BE 코드는 `server/`에만 둡니다.
 - **기능 폴더 단위로 담당자를 나눕니다** → 같은 파일 동시 수정 최소화
 - 다른 기능 폴더 내부 파일을 직접 import하지 않고 그 기능의 `index.ts`를 통해 가져옵니다.
-- import는 `@/` 경로 별칭으로 (`import { request } from '@/lib/api/client'`)
-- 공용 파일(`app/layout.tsx`, `lib/`, `package.json`, `next.config.*`, `tailwind.config.*`, `Dockerfile`, `docker-compose.yml`, `.env.example`) 수정 시 디스코드에 먼저 알립니다.
+- import는 `@/` 경로 별칭으로 (`import { request } from "@/lib/api/client"`)
+- 공용 파일(`app/layout.tsx`, `lib/`, `package.json`, `next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `postcss.config.mjs`, `app/globals.css`, `Dockerfile`, `docker-compose.yml`, `.env.example`) 수정 시 디스코드에 먼저 알립니다.
 
 ## 3. 레이어 규칙
 
@@ -86,11 +86,11 @@ page.tsx → feature component → hook → api.ts → lib/api/client.ts → /ap
 
 ### 서버 컴포넌트 / 클라이언트 컴포넌트
 
-- `app/` 파일은 기본이 서버 컴포넌트. 상태·이벤트·브라우저 API를 쓰는 파일은 맨 위에 `'use client'`
-  - `'use client'`는 기능의 진입 컴포넌트에 두고, page.tsx는 서버 컴포넌트로 유지
+- `app/` 파일은 기본이 서버 컴포넌트. 상태·이벤트·브라우저 API를 쓰는 파일은 맨 위에 `"use client"`
+  - `"use client"`는 기능의 진입 컴포넌트에 두고, page.tsx는 서버 컴포넌트로 유지
 - `server/` 코드는 **`import type`으로 타입만** 가져옵니다. 값(함수·zod 스키마)을 import하면 `server-only` 때문에 빌드 실패
   ```ts
-  import type { GuideRequest, GuideResponse } from '@/server/guide/schema';
+  import type { GuideRequest, GuideResponse } from "@/server/guide/schema";
   ```
 - FE는 Prisma·AI Gateway를 직접 부르지 않고 항상 `/api/...`를 거칩니다.
 
@@ -134,7 +134,7 @@ E2E는 `getByRole` / `getByLabel`로 화면 글자를 찾아 조작합니다.
 - API는 **상대 경로**로 호출: `/api/guides`. BE 주소 환경변수·`localhost:3000` 같은 절대 주소 금지 (키트 규칙)
 - 경로는 `/api/`로 시작하는 kebab-case 복수 명사 (예: `/api/guide-sessions/12`). `/__health`는 FE가 호출하지 않음
 - JSON 필드·쿼리 파라미터는 BE와 동일하게 **camelCase 그대로** 사용 (변환 금지)
-- 본문은 JSON, **화면 이미지 업로드만 `multipart/form-data`** (`FormData`, `Content-Type`은 직접 넣지 않음)
+- 본문은 **모두 JSON**. 화면 이미지도 data URL(base64) 문자열로 JSON의 `image` 필드에 넣음 (API_CONVENTION.md 2번 「화면 이미지 보내기」, 아래 8번)
 - 공통 응답 처리는 `client.ts`에서 한 번에:
 
 ```ts
@@ -155,18 +155,17 @@ export class ApiError extends Error {
 
 ```ts
 // lib/api/client.ts
-import { ApiError, type ApiResponse } from './types';
+import { ApiError, type ApiResponse } from "./types";
 
 export async function request<T>(path: `/api/${string}`, init?: RequestInit): Promise<T> {
-  const isForm = init?.body instanceof FormData;
   let res: Response;
   try {
     res = await fetch(path, {
       ...init,
-      headers: isForm ? init?.headers : { 'Content-Type': 'application/json', ...init?.headers },
+      headers: { "Content-Type": "application/json", ...init?.headers },
     });
   } catch {
-    throw new ApiError(0, 'NETWORK_ERROR', '인터넷 연결을 확인해 주세요.');
+    throw new ApiError(0, "NETWORK_ERROR", "인터넷 연결을 확인해 주세요.");
   }
 
   if (res.status === 204) return undefined as T;
@@ -175,8 +174,8 @@ export async function request<T>(path: `/api/${string}`, init?: RequestInit): Pr
   if (!res.ok || !body?.success) {
     throw new ApiError(
       res.status,
-      body?.code ?? 'INTERNAL_SERVER_ERROR',
-      body?.message ?? '잠시 후 다시 시도해 주세요.',
+      body?.code ?? "INTERNAL_SERVER_ERROR",
+      body?.message ?? "잠시 후 다시 시도해 주세요.",
     );
   }
   return body.data;
@@ -185,16 +184,18 @@ export async function request<T>(path: `/api/${string}`, init?: RequestInit): Pr
 
 ```ts
 // components/guide/api.ts
-import type { GuideResponse } from '@/server/guide/schema';
-import { request } from '@/lib/api/client';
+import type { GuideRequest, GuideResponse } from "@/server/guide/schema";
+import { request } from "@/lib/api/client";
 
-export function createGuide(form: FormData) {
-  return request<GuideResponse>('/api/guides', { method: 'POST', body: form });
+// body.image는 lib/image.ts가 만든 data URL ("data:image/jpeg;base64,...")
+export function createGuide(body: GuideRequest) {
+  return request<GuideResponse>("/api/guides", { method: "POST", body: JSON.stringify(body) });
 }
 ```
 
 - 컴포넌트·훅에서는 `data`만 받습니다. `success`, `message`를 다시 확인하지 않습니다.
 - 에러는 **상태 코드로 큰 분기, `code`로 세부 분기** (API_CONVENTION.md 4번 표 기준)
+  - 400(`IMAGE_INVALID`, `IMAGE_TOO_LARGE`): `message` 표시 + 다른 사진을 고르거나 화면을 다시 보게 안내
   - 401(`AUTH_REQUIRED`): 로그인 화면으로 이동
   - 429/503(`AI_*`): "잠시 후 다시 시도해 주세요" + **다시 시도 버튼**
   - 404: "없는 페이지" 처리
@@ -208,19 +209,19 @@ export function createGuide(form: FormData) {
   - 같은 주소라 `fetch`가 쿠키를 자동으로 보냄. localStorage에 로그인 정보 저장 금지
 - 로그인 `POST /api/auth/login` → 성공 시 이동, 로그아웃 `POST /api/auth/logout`, 내 정보 `GET /api/auth/me`
 - 로그인 안 한 사람이 `/`를 열면 **서비스 이름과 하는 일**이 보여야 함 (로그인 화면으로 보내거나 로그인 칸만 두지 않음)
-- 로그인이 필요한 화면은 로그인 전에 열리지 않아야 함. 구체 방식(라우트 그룹 layout / middleware)은 BE 인증 구현에 맞춰 함께 정함
+- 로그인이 필요한 화면은 로그인 전에 열리지 않아야 함. 구체 방식(라우트 그룹 layout / `proxy.ts` — Next.js 16에서 middleware 이름이 proxy로 바뀜)은 BE 인증 구현에 맞춰 함께 정함
 - 없는 주소는 `app/not-found.tsx`의 404 화면 (500 아님)
 - 시드 계정(`student@example.com` / `loopthon-2026`)으로 화면에서 바로 로그인되는지 확인
 
 ## 8. 이 프로젝트 전용 규칙 (브라우저 기능)
 
-> 아래는 모두 클라이언트 컴포넌트(`'use client'`) 안에서만 다룹니다.
+> 아래는 모두 클라이언트 컴포넌트(`"use client"`) 안에서만 다룹니다.
 
 ### 화면 공유·캡처
 - 화면 공유 시작은 **반드시 사용자 클릭에서** 호출 (`getDisplayMedia`는 클릭 없이 실패)
 - 공유 종료 시 모든 트랙을 `track.stop()`으로 정리하고, 브라우저의 "공유 중지" 버튼(`track.onended`)도 처리
-- BE 전송 이미지: **가로 최대 1280px, JPEG 품질 0.7 내외**로 축소·압축한 `Blob`을 `FormData`로 전송 (원본 전송 금지 — 요청 크기 제한). 필드명은 API 목록 기준
-- E2E는 화면 공유를 할 수 없고 `e2e/fixtures/`의 이미지를 올려서 확인하므로, **화면 사진을 파일로 올리는 입력**도 같은 흐름으로 처리되게 만듦 (`<label>` 붙은 `input type="file"`)
+- BE 전송 이미지: 캔버스에 **가로 최대 1280px**로 그린 뒤 `canvas.toDataURL("image/jpeg", 0.7)` 결과(data URL)를 `image` 필드에 그대로 넣어 JSON으로 전송 (원본 전송 금지, 4MB 넘으면 BE가 400 `IMAGE_TOO_LARGE`)
+- 축소·변환 함수는 `lib/image.ts` 하나로 두고 화면 공유 캡처와 "화면 사진 올리기"가 같이 씀
 - AI 호출은 팀 예산(누적 $10)을 함께 씀 → 화면이 바뀌었거나 사용자가 요청했을 때만 전송, **요청 중에는 다시 보내지 않음**
 - 캡처·변화 감지 간격 등 숫자는 `lib/constants.ts`에 상수로
 
@@ -232,12 +233,23 @@ export function createGuide(form: FormData) {
 - PiP 창 열기도 사용자 클릭에서만 호출
 - React는 `createPortal`로 PiP 창의 `document.body`에 렌더링하고, **열 때 원래 문서의 스타일시트를 PiP 창으로 복사** (안 하면 Tailwind 미적용)
 - PiP 관련 코드는 `components/pip/` 안에서만 다룸
-- 기능 지원 여부를 먼저 확인 (`'documentPictureInPicture' in window`). 미지원 시 "크롬 또는 엣지에서 열어 주세요" 안내
+- 기능 지원 여부를 먼저 확인 (`"documentPictureInPicture" in window`). 미지원 시 "크롬 또는 엣지에서 열어 주세요" 안내
 - `window`는 서버에서 렌더링될 때 없으므로 `useEffect` 안이나 클릭 핸들러에서만 접근
 
 ### 음성
-- 읽기는 `speechSynthesis` (`lang: 'ko-KR'`), 입력은 `SpeechRecognition` / `webkitSpeechRecognition`
+- 읽기는 `speechSynthesis` (`lang: "ko-KR"`), 입력은 `SpeechRecognition` / `webkitSpeechRecognition`
 - 음성 인식이 실패해도 진행할 수 있게 **텍스트 입력과 자주 쓰는 목표 버튼을 항상 함께** 제공
+
+### 키트 E2E 대응 (중요)
+
+주최 측 E2E는 우리 `playwright.config.ts`를 쓰지 않고 자체 설정으로 돌며, 가짜 응답·`addInitScript` 같은 우회도 금지입니다.
+→ **화면 공유(`getDisplayMedia`)·PiP·음성은 E2E에서 동작한다고 기대하지 않습니다.** 핵심 흐름이 이것들 없이도 끝까지 가야 합니다.
+
+- **화면 사진 올리기**: 화면 공유와 별개로 `<label>` 붙은 `input type="file"`로 화면 사진을 올리는 입력을 둠. 올린 사진도 캔버스로 다시 그려 캡처와 같은 처리(축소 → data URL → 전송 → 안내 표시)를 거침. E2E는 `e2e/fixtures/`의 사진으로 이 길을 탐
+- **결과는 본 화면에도 표시**: 안내 문장과 빨간 테두리를 PiP 창에만 띄우지 않고 본 화면에도 보여줌 (E2E는 본 화면에서 `expect`로 확인). PiP는 추가 기능
+- **목표 입력**: E2E에서는 음성 대신 텍스트 입력·목표 버튼으로 진행
+- **실패해도 멈추지 않게**: 화면 공유 거부·미지원, PiP 미지원, 음성 미지원일 때 오류로 멈추지 않고 안내 문구와 함께 "사진 올리기"·텍스트 입력으로 이어지게 함
+- `docs/scenarios.yaml` steps는 이 길(사진 올리기 → 목표 입력 → 안내 확인)의 버튼·메뉴 이름으로 작성
 
 ## 9. 부모님용 UI 규칙
 
@@ -274,7 +286,7 @@ NEXT_PUBLIC_USE_MOCK=
 - 브랜치: `feat/fe-<기능>`, `fix/fe-<내용>` (예: `feat/fe-screen-capture`) → `main`으로 PR
 - 커밋: `feat:` 기능 / `fix:` 버그 / `refactor:` 리팩터링 / `style:` UI·스타일 / `docs:` 문서 / `chore:` 설정·패키지
   - 예) `feat: 화면 공유 시작 버튼 구현`
-- 작업 순서: `main` pull → 브랜치 생성 → 작업 → `npm run lint && npm run build` → push → `main`으로 PR
+- 작업 순서: `main` pull → 브랜치 생성 → 작업 → `npm run lint && npm run typecheck && npm run build` (CI와 같은 검사) → push → `main`으로 PR
 - PR은 다른 FE 팀원이 확인 후 머지 (해커톤이므로 리뷰는 10분 이내로 가볍게, 막히면 본인 머지 후 공지)
 - 커밋은 작게, 자주 (기여도 집계에도 유리)
 - 패키지 추가 시 `package-lock.json`도 같이 커밋하고 디스코드에 공지 (BE와 같은 `package.json`을 씀)
@@ -295,6 +307,7 @@ NEXT_PUBLIC_USE_MOCK=
 - [ ] 시드 계정으로 화면에서 로그인되는지
 - [ ] 1440×900에서 화면이 깨지지 않는지
 - [ ] 버튼·메뉴 글자가 `docs/scenarios.yaml`과 같은지
+- [ ] 화면 공유·PiP·음성 없이 "사진 올리기 → 목표 입력 → 본 화면에 안내 표시"가 끝까지 되는지 (키트 E2E 경로)
 - [ ] HTTPS 배포 주소에서 화면 공유가 시작되는지
 - [ ] 전체 화면 공유 후 다른 프로그램으로 넘어가도 PiP 창이 위에 떠 있는지
 - [ ] 다른 탭에 있을 때도 캡처·변화 감지가 계속 동작하는지
