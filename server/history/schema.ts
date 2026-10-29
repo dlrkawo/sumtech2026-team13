@@ -1,4 +1,4 @@
-// 도움 기록 (GET /api/guide-history, DELETE /api/guide-history) — 시나리오 S7, 기획 F10·F11
+// 도움 기록 (GET /api/guide-history, DELETE /api/guide-history) — 흐름 S5·S6, 기능 F5(도움 기록)·F6(기록 남기지 않기)
 // 화면 이미지는 저장하지 않고 질문과 안내 문장만 남긴다
 
 export interface GuideHistoryItem {

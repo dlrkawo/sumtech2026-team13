@@ -13,7 +13,7 @@ interface HistoryRow {
   created_at: Date;
 }
 
-// 최신순 최대 50개 (S7)
+// 최신순 최대 50개 (S5)
 export async function listHistory(userId: number): Promise<GuideHistoryItem[]> {
   const rows = await query<HistoryRow>(
     `SELECT id, question, instruction, created_at FROM guide_histories

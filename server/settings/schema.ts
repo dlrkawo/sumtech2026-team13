@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 // 사용자 설정 (GET /api/settings 응답, PATCH /api/settings 요청)
-// 시나리오 S5(화면 가장자리 표시), S8(음성 인식), 기획 F8(클릭 영역 표시 모양)·F9(위험 경고)·F10(기록 저장)
+// 설정 창에서 쓰는 값: edgeDisplay·voiceInput·saveHistory(F6, 흐름 S6). highlightStyle·riskWarning은 BE만 지원하고
+// 설정 창에는 아직 스위치가 없어 기본값(테두리, 위험 경고 켜짐, F4)으로 동작한다
 export const HIGHLIGHT_STYLES = ["BORDER", "ARROW", "DIM"] as const; // 테두리 / 화살표 / 주변 어둡게
 export type HighlightStyle = (typeof HIGHLIGHT_STYLES)[number];
 
