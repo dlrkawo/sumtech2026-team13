@@ -220,7 +220,7 @@ export function createGuide(body: GuideRequest) {
 ### 화면 공유·캡처
 - 화면 공유 시작은 **반드시 사용자 클릭에서** 호출 (`getDisplayMedia`는 클릭 없이 실패)
 - 공유 종료 시 모든 트랙을 `track.stop()`으로 정리하고, 브라우저의 "공유 중지" 버튼(`track.onended`)도 처리
-- BE 전송 이미지: 캔버스에 **가로 최대 1280px**로 그린 뒤 `canvas.toDataURL("image/jpeg", 0.7)` 결과(data URL)를 `image` 필드에 그대로 넣어 JSON으로 전송 (원본 전송 금지, 4MB 넘으면 BE가 400 `IMAGE_TOO_LARGE`)
+- BE 전송 이미지: 캔버스에 **가로 최대 1280px**로 그린 뒤 `canvas.toDataURL("image/jpeg", 0.7)` 결과(data URL)를 `image` 필드에 그대로 넣어 JSON으로 전송 (원본 전송 금지, 3MB 넘으면 BE가 400 `IMAGE_TOO_LARGE` — Vercel 요청 본문 한도 4.5MB 안)
 - 축소·변환 함수는 `lib/image.ts` 하나로 두고 화면 공유 캡처와 "화면 사진 올리기"가 같이 씀
 - AI 호출은 팀 예산(누적 $10)을 함께 씀 → 화면이 바뀌었거나 사용자가 요청했을 때만 전송, **요청 중에는 다시 보내지 않음**
 - 캡처·변화 감지 간격 등 숫자는 `lib/constants.ts`에 상수로
