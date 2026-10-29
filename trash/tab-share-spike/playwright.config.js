@@ -41,6 +41,15 @@ module.exports = defineConfig({
       name: 'new-headless-fake-ui',
       use: { channel: 'chromium', launchOptions: { args: ['--use-fake-ui-for-media-stream'] } },
     },
+    // 가짜 마이크 장치 + 권한 창 자동 수락 (비교용, 주최 측 실행에는 적용되지 않음)
+    {
+      name: 'flag-fake-mic',
+      use: {
+        launchOptions: {
+          args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'],
+        },
+      },
+    },
     // 화면이 보이는 브라우저(headed) + 탭 제목 자동 선택
     {
       name: 'headed-tab-by-title',

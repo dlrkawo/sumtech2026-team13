@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>음성 실험</title>
+  </head>
+  <body>
+    <button id="record">마이크 녹음</button>
+    <button id="recognize">음성 인식</button>
+    <label>음성 파일 올리기 <input id="upload" type="file" accept="audio/*" /></label>
+    <button id="speak">읽어주기</button>
+    <pre id="result">대기 중</pre>
+    <script>
+      const result = document.getElementById('result');
+      const show = (obj) => (result.textContent = JSON.stringify(obj));
+      const fail = (e) => show({ status: 'FAILED', name: e.name || e.error, message: e.message || '' });
+      // 일정 시간 안에 아무 이벤트도 없으면 멈춘 것으로 본다
+      const timeout = (ms) => setTimeout(() => result.textContent === '요청 중' && show({ status: 'NO_RESPONSE', ms }), ms);
+
+      // 마이크로 1초 녹음해 녹음 크기를 확인한다
+      document.getElementById('record').addEventListener('click', async () => {
+        result.textContent = '요청 중';
+        timeout(8000);
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const track = stream.getAudioTracks()[0];
+          const recorder = new MediaRecorder(stream);
+          const chunks = [];
+          recorder.ondataavailable = (e) => chunks.push(e.data);
+          recorder.onstop = () => {
+            const size = chunks.reduce((n, c) => n + c.size, 0);
+            show({ status: 'RECORDED', label: track.label, bytes: size, mimeType: recorder.mimeType });
+            track.stop();
+          };
+          recorder.start();
+          setTimeout(() => recorder.stop(), 1000);
+        } catch (e) {
+          fail(e);
+        }
+      });
+
+      // 브라우저 음성 인식(Web Speech API)을 시작해 어떤 이벤트가 오는지 확인한다
+      document.getElementById('recognize').addEventListener('click', () => {
+        result.textContent = '요청 중';
+        timeout(8000);
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Recognition) {
+          show({ status: 'FAILED', name: 'NoSpeechRecognition' });
+          return;
+        }
+        const rec = new Recognition();
+        rec.lang = 'ko-KR';
+        const events = [];
+        rec.onstart = () => events.push('start');
+        rec.onaudiostart = () => events.push('audiostart');
+        rec.onresult = (e) => show({ status: 'RECOGNIZED', text: e.results[0][0].transcript, events });
+        rec.onerror = (e) => show({ status: 'FAILED', name: e.error, events });
+        rec.onend = () => result.textContent === '요청 중' && show({ status: 'ENDED', events });
+        try {
+          rec.start();
+        } catch (e) {
+          fail(e);
+        }
+      });
+
+      // 올린 음성 파일을 브라우저에서 해석해 길이를 확인한다
+      document.getElementById('upload').addEventListener('change', async (e) => {
+        result.textContent = '요청 중';
+        try {
+          const file = e.target.files[0];
+          const ctx = new AudioContext();
+          const audio = await ctx.decodeAudioData(await file.arrayBuffer());
+          show({ status: 'DECODED', name: file.name, type: file.type, seconds: Number(audio.duration.toFixed(2)) });
+        } catch (err) {
+          fail(err);
+        }
+      });
+
+      // 한국어 음성으로 읽어주기가 시작·끝나는지 확인한다
+      document.getElementById('speak').addEventListener('click', () => {
+        result.textContent = '요청 중';
+        timeout(8000);
+        const voices = speechSynthesis.getVoices();
+        const korean = voices.filter((v) => v.lang.startsWith('ko'));
+        const utter = new SpeechSynthesisUtterance('예약하기 버튼을 눌러 주세요');
+        utter.lang = 'ko-KR';
+        utter.rate = 0.9;
+        const events = [];
+        utter.onstart = () => events.push('start');
+        utter.onend = () => show({ status: 'SPOKEN', voices: voices.length, korean: korean.map((v) => v.name), events });
+        utter.onerror = (e) => show({ status: 'FAILED', name: e.error, voices: voices.length, events });
+        speechSynthesis.speak(utter);
+      });
+    </script>
+  </body>
+</html>
