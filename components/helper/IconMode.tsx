@@ -56,6 +56,7 @@ export function IconMode(props: IconModeProps) {
     onNext: props.onNext,
     onRetry: props.onRetry,
     onClose: () => props.onToggleBubble(false),
+    hasPhoto: props.hasPhoto,
     onPickPhoto: props.onPickPhoto,
   };
 

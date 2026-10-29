@@ -31,6 +31,8 @@ export interface AnswerBubbleProps {
   onNext: () => void;
   onRetry: () => void;
   onClose: () => void;
+  // 올린 사진이 있으면 버튼 글자가 '사진 올리기' → '사진 바꾸기'로 바뀐다 (docs/scenarios.yaml S2·S3)
+  hasPhoto: boolean;
   onPickPhoto: (file: File) => void;
 }
 
@@ -46,8 +48,10 @@ export function AnswerBubble({
   onNext,
   onRetry,
   onClose,
+  hasPhoto,
   onPickPhoto,
 }: AnswerBubbleProps) {
+  const photoLabel = hasPhoto ? "사진 바꾸기" : "사진 올리기";
   const isRisk = !isLoading && guide?.risk != null;
   const showGuide = !isLoading && !error && guide !== null;
   // 누를 곳을 찾지 못하면(target 없음) '누를 곳을 찾았어요' 없이 안내 문장만 보인다 (problem.yaml design_decision 한계)
@@ -62,8 +66,9 @@ export function AnswerBubble({
         <p className="flex-1 text-[20px] font-bold text-[#1D4E89]" aria-live="polite">
           {title}
         </p>
+        {/* 아이콘만 두면 어르신이 무슨 버튼인지 알기 어렵고, E2E도 보이는 글자('사진 올리기'·'사진 바꾸기')로 누르므로 글자를 같이 쓴다 */}
         <label
-          className={`flex h-[56px] w-[56px] shrink-0 cursor-pointer items-center justify-center rounded-[28px] border-2 border-[#C9C6BE] bg-white hover:bg-[#F0EFEB] focus-within:outline-[4px] focus-within:outline-offset-[3px] focus-within:outline-[#E8A200]`}
+          className={`flex min-h-[56px] shrink-0 cursor-pointer items-center justify-center gap-[6px] rounded-[28px] border-2 border-[#C9C6BE] bg-white px-[14px] text-[20px] font-bold hover:bg-[#F0EFEB] focus-within:outline-[4px] focus-within:outline-offset-[3px] focus-within:outline-[#E8A200]`}
         >
           <svg
             width="24"
@@ -78,10 +83,11 @@ export function AnswerBubble({
             <circle cx="9" cy="11" r="2" />
             <path d="M21 16l-5-5-8 8" />
           </svg>
+          <span>{photoLabel}</span>
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            aria-label="화면 사진 올리기"
+            aria-label={photoLabel}
             className="sr-only"
             onChange={(e) => {
               const file = e.target.files?.[0];
