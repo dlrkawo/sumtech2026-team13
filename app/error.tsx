@@ -14,7 +14,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col justify-center gap-6 px-6">
       <h1 className="text-3xl font-bold">문제가 생겨 화면을 보여 드리지 못했어요</h1>
-      <p className="text-2xl text-neutral-700">잠시 후 다시 열어 주세요. 받으신 안내는 사라지지 않았어요.</p>
+      <p className="text-2xl text-neutral-700">잠시 후 다시 열어 주세요. ‘기록 저장’을 켜 두셨다면 지난 질문과 안내는 ‘도움 기록’에서 다시 볼 수 있어요.</p>
       <button
         type="button"
         onClick={reset}

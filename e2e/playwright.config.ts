@@ -14,7 +14,8 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   // 흐름 하나(AI 응답 대기 포함)가 로컬에서 1분 안에 끝나게 만든다. 주최 측 실행은 동작마다 화면을 찍어 더 오래 걸린다.
-  timeout: 120_000,
+  // 주최 측 자동 실행은 테스트별 90초 제한이 있어 같은 값으로 미리 확인한다.
+  timeout: 90_000,
   expect: { timeout: 10_000 },
   reporter: [["list"], ["html", { open: "never" }]],
   use: {

@@ -2,12 +2,13 @@
 
 Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(`docs/` 아래에 두지 않는다). 필수 제출 양식을 대신하는 문서가 아니다. 비밀번호·토큰·팀 로그인 코드는 적지 않는다.
 
-## 현재 상태 (2026-10-30 07:00 기준, main `c855168`)
+## 현재 상태 (2026-10-30 07:20 기준, #91·#90 머지 후 main)
 
 - 서비스: **눌러보슈** — 디지털이 낯선 부모님이 막힌 화면을 보여 주면(화면 공유 또는 사진) AI가 다음에 누를 곳 한 군데를 화면 위에 짚어 주고, 되돌리기 어려운 버튼 앞에서는 경고한다.
 - 실제 서비스 저장소 폴더: 학생 맥 `OneDrive-개인/dlrkawo/2026 4-2/SUMTECH/be` (원격 https://github.com/dlrkawo/sumtech2026-team13). push는 각자 터미널에서 하고, main은 PR로만 바뀐다(룰셋: PR 필수, 필수 검사 `check`·`docs`).
-- 현재 단계: 1~6단계 완료, 7단계 최종 검증·마무리 정리 중. 채점 흐름 S1~S7이 로컬 docker와 CI(`scenarios`) 모두에서 통과.
-- 10.30 새벽 이후 머지(#74~#86): 지난 안내 목록으로 이어 묻기·retryable(#74), 탭 공유 후 눌러보슈 탭 유지(#75), 아이콘 모드 글자·설정 버튼 56px(#76·#77), 사진 모드 같은 사진 '다음' 막기·입력 출처 표시(#78), 1280×720 배치(#80), 서비스명 곁길→눌러보슈(#81), 실패 뒤 화면 바꾸면 오류 지우기(#82), 공유 끊김 알림·공유 직후 첫 장면 대기(#83), trash/·예시 spec 삭제(#85), 오류 화면·탭 아이콘(#86), progress·README 갱신(#87), 경험 사례 E1~E3(#88), vitest 단위 테스트 38개(#89)
+- 현재 단계: 1~6단계 완료, 7단계 최종 검증·마무리 정리 중. 채점 흐름 S1~S7이 로컬 docker와 CI(`scenarios`) 모두에서 통과, 단위 테스트 38개(CI `check`의 Unit test 단계)도 통과.
+- 10.30 새벽 이후 머지(#74~#91): 지난 안내 목록으로 이어 묻기·retryable(#74), 탭 공유 후 눌러보슈 탭 유지(#75), 아이콘 모드 글자·설정 버튼 56px(#76·#77), 사진 모드 같은 사진 '다음' 막기·입력 출처 표시(#78), 1280×720 배치(#80), 서비스명 곁길→눌러보슈(#81), 실패 뒤 화면 바꾸면 오류 지우기(#82), 공유 끊김 알림·공유 직후 첫 장면 대기(#83), 누를 곳 크게 보기·사진 크게 보기(#84), trash/·예시 spec 삭제(#85), 오류 화면·탭 아이콘(#86), progress·README 정리(#87), 기능 명세·S3에 같은 사진 '다음' 확인·경험 사례 E1~E3(#88), vitest 단위 테스트 38개(#89), experiences 구조·표기 정리(#90), 제출 전 최종 점검 반영(#91)
+- 제출 전 최종 점검(대시보드 SUBMISSION_CHECK.md, 07:15): 저장소·문서 형식·흐름·E2E·Docker·배포를 main `c855168` 기준으로 대조. 결과와 남은 일은 7단계 참고.
 - 10:00 코드 머지 중단 예정. 그 뒤는 문서(problem.yaml·progress.md)만 손본다.
 - 다음 행동: 아래 7단계의 남은 항목, 「아직 못 한 일」 참고.
 
@@ -59,8 +60,8 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 - [x] GET /__health가 인증·리다이렉트 없이 200 응답(app/%5F%5Fhealth, `Cache-Control: no-store`), docker는 RELEASE_ID·Vercel은 VERCEL_GIT_COMMIT_SHA를 releaseId로 응답
 - [x] 공개 HTTPS URL 첫 배포 (Vercel + Neon Postgres 무료 등급, Production 환경에만 DATABASE_URL·AI_GATEWAY_API_KEY)
 - [x] CI 실제 검사: `ci`(lint·typecheck·build + 키트 문서 형식 `docs`), `scenarios`(docker로 앱을 띄워 e2e 실행, 문서만 바뀐 머지는 건너뜀). main 룰셋 필수 검사는 `check`·`docs`
-- [x] Agent가 대시보드 배포 URL 저장, UP·배포 commit 일치 확인 — 임시 주소로 다시 저장, 대시보드 UP, `/__health` releaseId = main `9b35a47` (10.30 04:40)
-- 배포 URL: https://sumtech2026-team13.vercel.app (원래 주소. 10.30 01:55 Vercel Hobby 하루 배포 한도로 갱신이 멈췄다가 06:40 현재 다시 갱신되어 `/__health` releaseId 96a79dd) / 임시 https://sumtech2026-team13-one.vercel.app (팀원 Vercel 계정, 같은 DB, 06:40 releaseId 797b939 = main 최신). 두 주소 모두 main 머지마다 자동 배포 중. 대시보드에는 임시 주소가 저장돼 있음(04:40) — 최종 제출 전 어느 주소로 둘지 확인 필요
+- [x] Agent가 대시보드 배포 URL 저장, UP·배포 commit 일치 확인 — 대시보드 저장 주소는 임시 주소, 07:10 `/__health` releaseId = main `c855168`로 일치
+- 배포 URL: 임시 https://sumtech2026-team13-one.vercel.app (팀원 Vercel 계정, 같은 DB, main 머지마다 자동 배포, 대시보드 저장 주소, 07:10 releaseId `c855168` = main 최신) / 원래 https://sumtech2026-team13.vercel.app (Vercel Hobby 하루 배포 한도로 06:40 이후 다시 막혀 07:10 releaseId `9fb0d9c`에 멈춤, GitHub 커밋의 Vercel 상태 'rate limited')
 - CI·배포 링크: https://github.com/dlrkawo/sumtech2026-team13/actions
 
 ## 4. 서비스 AI API 설정 (필요할 때만)
@@ -112,12 +113,13 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 - [x] 같은 배포 URL을 다시 저장해 대시보드 UP·최종 배포 commit 일치 확인
 - [x] 학생이 자료 → 제출 요건 화면에서 노란 줄이 없다고 확인
 - [ ] 문제정의·구현 설계·최종 결과 링크와 미확인 사항 보고
-- 검사 결과 / CI·배포 링크 / 최종 commit SHA: CI `ci`(lint·typecheck·단위 테스트 38개·build)·`scenarios`(S1~S7) 통과, https://github.com/dlrkawo/sumtech2026-team13/actions, main `c855168` (06:53)
+- 검사 결과 / CI·배포 링크 / 최종 commit SHA: CI `ci`(lint·typecheck·단위 테스트 38개·build)·`scenarios`(S1~S7) 통과, https://github.com/dlrkawo/sumtech2026-team13/actions, main `c855168` (07:15, `ci` #188·`scenarios` #80)
 - 흐름별 E2E 결과: S1~S7 통과(로컬 docker·CI)
 - 확인 기록: 10.30 04:00 채점 커밋 `c824b54`(#63)는 사진 버튼이 아이콘만 남아(#61) spec이 누를 '사진 올리기' 글자가 없었고, S6은 Next.js가 늘 넣는 빈 알림(role=alert)까지 세어 S2~S6이 실패 → #66(버튼 글자)·#68(S6 확인 범위)로 고쳐 main `9b35a47`에서 S1~S7 통과
-- 배포 URL: 원래 주소·임시 주소 모두 자동 배포 재개(3단계 배포 URL 항목 참고). 대시보드 저장 주소는 임시 주소
+- 배포 URL: 대시보드에 저장된 임시 주소가 main 최신과 일치(3단계 배포 URL 참고). 원래 주소는 하루 배포 한도로 멈춰 있음
 - 다음 행동 / 제한:
-  - (기획) experiences E1~E3에 when(언제)·feeling(그때 기분)·quote(당사자 말)를 인터뷰 기록에서 옮겨 적기. 가족 모의 예약 관찰 결과가 나오면 insight.evidence에 추가
+  - (기획) experiences E1~E3(#90에서 구조·표기 정리)에 when(언제)·feeling(그때 기분)·quote(당사자 말)를 인터뷰 기록에서 옮겨 적기
+  - (기획) insight의 확인 계획(가족 2~3명 모의 예약 관찰)을 실행하고 결과를 insight.evidence에 적기 — 지금은 "확인하지 않았다"로 끝남
   - (기획) problem.yaml의 범위 문구를 scenarios와 같게 "PC 크롬·엣지 웹 예약"으로 명시하고, F4 output의 위험 경고 설정 문구를 현재 구현과 맞추기
   - (구현) 단위 테스트 38개(`npm test`, tests/unit/) + E2E S1~S7. AI 적중률은 `scripts/smoke-guide.sh`로 fixtures·practice 화면을 여러 번 돌려 표로 남길 예정
   - 원래 Vercel로 돌아오면 Neon DB 비밀번호 교체(Rotate Secrets) 후 재배포
