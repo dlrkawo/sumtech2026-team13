@@ -1,7 +1,7 @@
 import type { GuideHistoryResponse } from "@/server/history/schema";
 import { request } from "@/lib/api/client";
 
-// 내 도움 기록, 최신순 최대 50개 (S7). 로그인 필요
+// 내 도움 기록, 최신순 최대 50개 (S5·S6). 로그인 필요
 export function listHistory(): Promise<GuideHistoryResponse> {
   return request<GuideHistoryResponse>("/api/guide-history");
 }

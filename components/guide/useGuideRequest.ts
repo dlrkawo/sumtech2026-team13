@@ -14,8 +14,8 @@ export type GuideRequestState =
 // 안내 요청 하나의 상태(요청 전 → 분석 중 → 결과 / 오류)를 관리한다. 화면 구성과는 상관없이 쓴다.
 //   const { state, ask, retry, reset } = useGuideRequest();
 //   ask({ image: await fileToDataUrl(file), question });
-//   다음 단계를 이어서 물을 때는 바로 전 안내 문장을 같이 보낸다 (API_CONVENTION.md 10번)
-//   ask({ image, question, previousInstruction: state.data.instruction });
+//   다음 단계를 이어서 물을 때는 지금까지 받은 안내 문장들을 같이 보낸다 (API_CONVENTION.md 10번)
+//   ask({ image, question, previousInstructions: [...(state.request.previousInstructions ?? []), state.data.instruction] });
 export function useGuideRequest() {
   const [state, setState] = useState<GuideRequestState>({ status: "idle" });
   // 분석 중에는 다시 보내지 않는다 (AI 예산 공용, FE_CONVENTION.md 8번)

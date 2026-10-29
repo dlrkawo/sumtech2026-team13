@@ -129,6 +129,8 @@ export function HelperApp() {
           email={auth.state.user.email}
           settings={settings}
           error={settingsError}
+          logoutError={auth.logoutError}
+          isLoggingOut={auth.isLoggingOut}
           isSaving={isSavingSettings}
           onUpdate={(patch) => void update(patch)}
           onOpenHistory={() => setView("history")}

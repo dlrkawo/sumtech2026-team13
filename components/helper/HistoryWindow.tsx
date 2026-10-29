@@ -15,7 +15,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat("ko-KR", {
   minute: "2-digit",
 });
 
-// 도움 기록 (S7). 목록과 지우기는 바깥(HelperApp의 useHistory)에서 받는다
+// 도움 기록 (S5·S6). 목록과 지우기는 바깥(HelperApp의 useHistory)에서 받는다
 export function HistoryWindow({
   items,
   error,

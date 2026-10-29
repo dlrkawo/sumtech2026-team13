@@ -25,7 +25,7 @@
 ## 2. 요청/응답 기본
 
 - 본문은 **모두 JSON** (`Content-Type: application/json`). 화면 이미지도 JSON 안에 base64로 보냄 (아래 「화면 이미지 보내기」)
-- JSON 필드는 camelCase (예: `previousInstruction`, `createdAt`)
+- JSON 필드는 camelCase (예: `previousInstructions`, `createdAt`)
 - FE에서 쓸 요청·응답 타입은 BE가 `server/<domain>/schema.ts`에 정의하고 `export type`/`interface`로 내보냄 → FE는 `import type`으로 가져와 사용 (타입만 가져오므로 서버 코드가 브라우저로 섞이지 않음)
 
 ### 화면 이미지 보내기 (base64 JSON, 팀 결정 10.29)
@@ -99,7 +99,7 @@
 - 같은 앱이므로 **httpOnly 쿠키 세션**(`sid`, 7일)을 씁니다. FE는 토큰을 저장하거나 헤더에 붙이지 않음
   - 쿠키는 `sameSite=lax`, https일 때만 `Secure` (docker E2E는 http라서)
 - 가입 `POST /api/auth/signup`과 로그인 `POST /api/auth/login`은 성공하면 바로 쿠키를 설정 (가입 직후 로그인 상태)
-- 로그아웃: `POST /api/auth/logout` / 내 정보: `GET /api/auth/me` (새로고침해도 로그인 유지 확인용)
+- 로그아웃: `POST /api/auth/logout`은 세션·쿠키를 지우며, 이미 로그아웃했거나 비로그인 상태여도 204를 반환합니다(멱등). / 내 정보: `GET /api/auth/me` (새로고침해도 로그인 유지 확인용)
 - 로그인이 필요한 API에 쿠키가 없거나 만료되면 401 + `AUTH_REQUIRED`
 - 시드 계정(`SEED_USER_EMAIL`/`SEED_USER_PASSWORD`, 로컬 docker 전용)으로 바로 로그인 가능 (키트 E2E)
 
@@ -131,7 +131,7 @@
 | 헬스체크 (키트) | GET | `/__health` | - | `{ releaseId }` (공통 응답 형식 아님) | 불필요 | 이감재 | 채점 시작 신호 | 배포 |
 | 회원가입 | POST | `/api/auth/signup` | `AuthRequest` `{ email, password }` | `AuthUserResponse` `{ id, email }` (201, 쿠키 설정) | 불필요 | 이감재 | S1, S6 | 구현 |
 | 로그인 | POST | `/api/auth/login` | `AuthRequest` | `AuthUserResponse` (쿠키 설정) | 불필요 | 이감재 | S2~S5, S7 (시드 계정) | 구현 |
-| 로그아웃 | POST | `/api/auth/logout` | - | 204 (쿠키 삭제) | 필요 | 이감재 | - | 구현 |
+| 로그아웃 | POST | `/api/auth/logout` | - | 204 (쿠키 삭제, 비로그인도 동일) | 불필요 | 이감재 | - | 구현 |
 | 내 정보 | GET | `/api/auth/me` | - | `AuthUserResponse` | 필요 | 이감재 | 첫 화면 로그인 확인 | 구현 |
 | 설정 조회 | GET | `/api/settings` | - | `SettingsResponse` | 필요 | 이감재 | 설정 창 | 구현 |
 | 설정 저장 | PATCH | `/api/settings` | `SettingsUpdateRequest` (바꿀 값만) | `SettingsResponse` (바뀐 전체) | 필요 | 이감재 | S6 ('기록 저장' 끄기) | 구현 |
@@ -149,7 +149,7 @@
 ### 10-1. `POST /api/guides` 동작
 
 - `previousInstruction`(선택)은 바로 전 안내 문장. 있으면 AI가 같은 일의 **다음 단계**를 이어서 판단한다
-- `previousInstructions`(선택, 문자열 배열)는 **이 일에서 지금까지 받은 안내 문장들(오래된 순, 마지막이 바로 전 안내)**. 최근 5개를 AI에 순서대로 넘겨서, 여러 단계짜리 일에서도 앞 단계를 알고 다음 단계를 고른다. 각 줄은 `previousInstruction`과 같은 규칙(300자로 자름, 2000자 초과는 400), 빈 줄은 버림, 50개 초과는 400. **둘 다 오면 `previousInstructions`를 쓴다** (한 줄만 보내는 예전 요청도 그대로 동작)
+- `previousInstructions`(선택, 문자열 배열)는 **이 일에서 지금까지 받은 안내 문장들(오래된 순, 마지막이 바로 전 안내)**. 최근 5개를 AI에 순서대로 넘겨서, 여러 단계짜리 일에서도 앞 단계를 알고 다음 단계를 고른다. 각 줄은 `previousInstruction`과 같은 규칙(300자로 자름, 2000자 초과는 400), 빈 줄은 버림, 50개 초과는 400. **정리 후 비어 있지 않은 `previousInstructions`가 우선**한다. 목록이 없거나 빈 배열(`[]`, 빈 줄만 있는 목록 포함)이면 `previousInstruction`으로 되돌아가며, 둘 다 비어 있으면 이전 안내 없이 판단한다 (한 줄만 보내는 예전 요청도 그대로 동작)
   - FE는 `previousInstructions`만 보낸다: '눌렀어요, 다음 알려 주세요'를 눌렀을 때, 그리고 바로 전과 **같은 질문**으로 다시 '물어보기'했을 때, **새 화면으로 물을 때만**(공유 화면은 매번 새로 찍은 장면, 사진은 지난번과 다른 사진) 이번 일에서 받은 안내를 모두 보낸다. 바로 전 안내가 `IN_PROGRESS`일 때만 보내고, 이때 'N단계'가 하나 올라간다. 같은 사진·같은 질문으로 '물어보기'하면 새로 묻기(1단계) (`components/helper/useHelperSession.ts`)
   - 사진으로 묻는 중에 지난번과 **같은 사진**으로 '눌렀어요, 다음 알려 주세요'를 누르면 요청을 보내지 않고 말풍선에 "바뀐 화면을 '사진 바꾸기'로 올린 뒤 다시 눌러 주세요."를 보여 준다 (옛 화면을 다음 화면처럼 보내지 않도록)
   - 실패 뒤 '다시 시도'는 방금 실패한 요청(그때의 화면·질문)을 그대로 보내고, 그 위에 "방금 실패한 요청을 다시 보내요."를 보여 준다. 실패한 상태에서 물어볼 화면이 바뀌면('사진 올리기'·'사진 바꾸기'로 사진을 고름, ▶로 공유 시작·전환) 오류와 '다시 시도'를 지운다. 받은 안내는 지우지 않는다
