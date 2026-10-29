@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { useAuth } from "@/components/auth";
 import { useHistory } from "@/components/history";
+import { usePipWindow } from "@/components/pip";
 import { useSettings } from "@/components/settings";
 import { useSpeechInput } from "@/components/voice";
 
@@ -11,6 +13,7 @@ import { AuthWindow } from "./AuthWindow";
 import { HistoryWindow } from "./HistoryWindow";
 import { IconMode } from "./IconMode";
 import { SettingsWindow } from "./SettingsWindow";
+import { BUTTON_PRIMARY, FOCUS_RING } from "./styles";
 import { useHelperSession } from "./useHelperSession";
 
 // 화면 흐름 (docs/scenarios.yaml, 기획 확정)
@@ -44,6 +47,8 @@ export function HelperApp() {
     [ask],
   );
   const voice = useSpeechInput(onHeard);
+  // 로그인 뒤 화면을 PiP 작은 창으로 옮겨 다른 탭 위에 띄운다 (PiP 미지원 브라우저·E2E에서는 본 화면 그대로)
+  const pip = usePipWindow();
 
   if (auth.state.status === "checking") return null;
   if (auth.state.status === "guest") {
@@ -61,7 +66,7 @@ export function HelperApp() {
   const startHelp = () => setView("icon");
   const voiceEnabled = settings?.voiceInput ?? false;
 
-  return (
+  const screens = (
     <>
       <div hidden={view !== "icon"}>
         <IconMode
@@ -98,6 +103,7 @@ export function HelperApp() {
           onOpenHistory={() => setView("history")}
           onStart={startHelp}
           onLogout={() => {
+            pip.close();
             session.stop();
             setView("settings");
             void auth.logout();
@@ -113,6 +119,45 @@ export function HelperApp() {
           onBack={() => setView("settings")}
           onStart={startHelp}
         />
+      )}
+    </>
+  );
+
+  // 본 화면의 PiP 버튼·안내는 아이콘 모드와 같은 자리(좁으면 Landing 아래, sm부터 Landing 오른쪽)에 둔다
+  if (pip.pipWindow) {
+    return (
+      <>
+        {createPortal(screens, pip.pipWindow.document.body)}
+        <div className="flex flex-col items-center gap-[16px] px-[16px] py-[24px] text-center text-[22px] sm:fixed sm:inset-y-0 sm:right-0 sm:left-[300px] sm:justify-center">
+          <p className="font-bold">작은 창에서 도와드리고 있어요</p>
+          <div className="w-[320px] max-w-full">
+            <button type="button" onClick={pip.close} className={BUTTON_PRIMARY}>
+              이 화면으로 돌아오기
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {screens}
+      {view === "icon" && pip.isSupported && (
+        <div className="z-30 flex flex-col items-center gap-[6px] pb-[20px] sm:fixed sm:top-[16px] sm:right-[16px] sm:items-end sm:pb-0">
+          <button
+            type="button"
+            onClick={() => void pip.open()}
+            className={`min-h-[56px] rounded-[30px] border-2 border-[#C9C6BE] bg-white px-[18px] text-[20px] font-bold text-[#16191D] shadow-[0_8px_18px_rgba(0,0,0,.14)] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
+          >
+            작은 창으로 띄우기
+          </button>
+          {pip.error && (
+            <p role="alert" className="text-[18px] text-[#B42318]">
+              {pip.error}
+            </p>
+          )}
+        </div>
       )}
     </>
   );
