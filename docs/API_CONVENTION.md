@@ -141,7 +141,7 @@
 | 도움 기록 전체 삭제 | DELETE | `/api/guide-history` | - | 204 | 필요 | 이감재 | 도움 기록 창 | 구현 |
 
 - 타입 위치: `server/auth/schema.ts`, `server/settings/schema.ts`, `server/guide/schema.ts`, `server/history/schema.ts`, `server/voice-guide/schema.ts`
-- 입력 제한: 비밀번호 8~72자, `question` 1~200자, `previousInstruction` 300자를 넘으면 앞 300자만 사용(2000자 초과만 400), 검사 오류 문구는 모두 한국어, 이미지 3MB, 목소리 1MB
+- 입력 제한: 비밀번호 8~72자, `question` 1~200자, `previousInstruction`·`previousInstructions`의 각 줄은 300자를 넘으면 앞 300자만 사용(2000자 초과만 400), `previousInstructions`는 50개까지(AI에는 최근 5개), 검사 오류 문구는 모두 한국어, 이미지 3MB, 목소리 1MB
 - 설정 기본값 (`DEFAULT_SETTINGS`): 화면 가장자리 표시 켜짐, 음성 인식 꺼짐, 누를 곳 표시 `BORDER`, 위험 경고 켜짐, 기록 저장 켜짐
   - 설정 창에 스위치가 있는 값: `edgeDisplay`, `voiceInput`, `saveHistory`. `highlightStyle`(`BORDER`·`ARROW`·`DIM`)과 `riskWarning`은 BE만 지원하고 화면에는 아직 없음
 - 상태: 명세(타입 확정) → 구현 → 배포
