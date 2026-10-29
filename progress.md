@@ -2,11 +2,13 @@
 
 Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(`docs/` 아래에 두지 않는다). 필수 제출 양식을 대신하는 문서가 아니다. 비밀번호·토큰·팀 로그인 코드는 적지 않는다.
 
-## 현재 상태 (2026-10-30 04:40 기준, main `9b35a47`)
+## 현재 상태 (2026-10-30 06:40 기준, main `797b939`)
 
 - 서비스: **눌러보슈** — 디지털이 낯선 부모님이 막힌 화면을 보여 주면(화면 공유 또는 사진) AI가 다음에 누를 곳 한 군데를 화면 위에 짚어 주고, 되돌리기 어려운 버튼 앞에서는 경고한다.
 - 실제 서비스 저장소 폴더: 학생 맥 `OneDrive-개인/dlrkawo/2026 4-2/SUMTECH/be` (원격 https://github.com/dlrkawo/sumtech2026-team13). push는 각자 터미널에서 하고, main은 PR로만 바뀐다(룰셋: PR 필수, 필수 검사 `check`·`docs`).
-- 현재 단계: 1~6단계 완료, 7단계 최종 검증 중. 채점 흐름 S1~S7이 로컬 docker와 CI(`scenarios`) 모두에서 통과.
+- 현재 단계: 1~6단계 완료, 7단계 최종 검증·마무리 정리 중. 채점 흐름 S1~S7이 로컬 docker와 CI(`scenarios`) 모두에서 통과.
+- 10.30 새벽 이후 머지(#74~#86): 지난 안내 목록으로 이어 묻기·retryable(#74), 탭 공유 후 눌러보슈 탭 유지(#75), 아이콘 모드 글자·설정 버튼 56px(#76·#77), 사진 모드 같은 사진 '다음' 막기·입력 출처 표시(#78), 1280×720 배치(#80), 서비스명 곁길→눌러보슈(#81), 실패 뒤 화면 바꾸면 오류 지우기(#82), 공유 끊김 알림·공유 직후 첫 장면 대기(#83), trash/·예시 spec 삭제(#85), 오류 화면·탭 아이콘(#86)
+- 10:00 코드 머지 중단 예정. 그 뒤는 문서(problem.yaml·progress.md)만 손본다.
 - 다음 행동: 아래 7단계의 남은 항목, 「아직 못 한 일」 참고.
 
 ## 1. GitHub 준비
@@ -58,7 +60,7 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 - [x] 공개 HTTPS URL 첫 배포 (Vercel + Neon Postgres 무료 등급, Production 환경에만 DATABASE_URL·AI_GATEWAY_API_KEY)
 - [x] CI 실제 검사: `ci`(lint·typecheck·build + 키트 문서 형식 `docs`), `scenarios`(docker로 앱을 띄워 e2e 실행, 문서만 바뀐 머지는 건너뜀). main 룰셋 필수 검사는 `check`·`docs`
 - [x] Agent가 대시보드 배포 URL 저장, UP·배포 commit 일치 확인 — 임시 주소로 다시 저장, 대시보드 UP, `/__health` releaseId = main `9b35a47` (10.30 04:40)
-- 배포 URL: https://sumtech2026-team13.vercel.app (원래 주소, 10.30 01:55 Vercel Hobby 하루 배포 100회 한도 초과로 24시간 갱신 중단) → 임시 https://sumtech2026-team13-one.vercel.app (팀원 Vercel 계정, 같은 DB, 02:26 `/__health` releaseId 0ae8236 확인)
+- 배포 URL: https://sumtech2026-team13.vercel.app (원래 주소. 10.30 01:55 Vercel Hobby 하루 배포 한도로 갱신이 멈췄다가 06:40 현재 다시 갱신되어 `/__health` releaseId 96a79dd) / 임시 https://sumtech2026-team13-one.vercel.app (팀원 Vercel 계정, 같은 DB, 06:40 releaseId 797b939 = main 최신). 두 주소 모두 main 머지마다 자동 배포 중. 대시보드에는 임시 주소가 저장돼 있음(04:40) — 최종 제출 전 어느 주소로 둘지 확인 필요
 - CI·배포 링크: https://github.com/dlrkawo/sumtech2026-team13/actions
 
 ## 4. 서비스 AI API 설정 (필요할 때만)
@@ -110,11 +112,16 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 - [x] 같은 배포 URL을 다시 저장해 대시보드 UP·최종 배포 commit 일치 확인
 - [x] 학생이 자료 → 제출 요건 화면에서 노란 줄이 없다고 확인
 - [ ] 문제정의·구현 설계·최종 결과 링크와 미확인 사항 보고
-- 검사 결과 / CI·배포 링크 / 최종 commit SHA: CI `ci`·`scenarios` 통과, https://github.com/dlrkawo/sumtech2026-team13/actions, main `9b35a47`
+- 검사 결과 / CI·배포 링크 / 최종 commit SHA: CI `ci`·`scenarios` 통과, https://github.com/dlrkawo/sumtech2026-team13/actions, main `797b939` (06:40)
 - 흐름별 E2E 결과: S1~S7 통과(로컬 docker·CI)
 - 확인 기록: 10.30 04:00 채점 커밋 `c824b54`(#63)는 사진 버튼이 아이콘만 남아(#61) spec이 누를 '사진 올리기' 글자가 없었고, S6은 Next.js가 늘 넣는 빈 알림(role=alert)까지 세어 S2~S6이 실패 → #66(버튼 글자)·#68(S6 확인 범위)로 고쳐 main `9b35a47`에서 S1~S7 통과
-- 배포 URL: https://sumtech2026-team13-one.vercel.app (임시, 원래 주소는 한도가 풀리면 복구)
+- 배포 URL: 원래 주소·임시 주소 모두 자동 배포 재개(3단계 배포 URL 항목 참고). 대시보드 저장 주소는 임시 주소
 - 아직 못 한 일 / 제한 / 다음 행동:
-  - experiences에 팀원 실제 사례 보강
+  - (기획) experiences에 팀원 실제 사례(when·장면·대응·말) 1건 이상 보강 — E1은 대표 유형뿐
+  - (기획) insight의 확인 계획(가족 2~3명 모의 예약 관찰)을 실행하고 결과를 insight.evidence·experiences에 적기 — 지금은 "확인하지 않았다"로 끝남
+  - (기획) problem.yaml customer·statement의 범위를 scenarios와 같게 "PC 크롬·엣지 웹 예약"으로 한 줄 명시. F4 output의 "설정 창에 끄는 스위치는 아직 없음"과 5단계 "위험 경고 설정 완료" 중 사실에 맞게 통일
+  - (구현) 단위 테스트 없음(E2E S1~S7만). 위험 경고 정규식·좌표 변환·응답 파싱은 미검증
+  - (구현) AI 적중률 기록 없음. `scripts/smoke-guide.sh`로 fixtures 4장·practice 3장을 여러 번 돌려 표로 남기면 근거가 됨
+  - (구현) `server/guide/prompt.ts` 주석의 trash/locate-element.js 언급 정리(#85에서 폴더는 삭제됨)
   - 원래 Vercel로 돌아오면 Neon DB 비밀번호 교체(Rotate Secrets) 후 재배포
-  - 화면 공유는 PC 크롬·엣지에서만 됨(휴대폰 앱 화면은 보류)
+  - 화면 공유는 PC 크롬·엣지에서만 됨(휴대폰 앱 화면은 보류). ▶ 공유·마이크는 자동 테스트 불가라 수동 확인
