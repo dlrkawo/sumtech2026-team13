@@ -1,35 +1,52 @@
 import path from "node:path"
 import { expect, test, type Page } from "@playwright/test"
-import { E2E_USER_EMAIL, E2E_USER_PASSWORD } from "../env"
 
 const AI_WAIT = { timeout: 60_000 }
 const fixture = (name: string) => path.join(__dirname, "../fixtures", name)
 
-async function logIn(page: Page) {
-  await page.goto("/")
-  await page.getByLabel("이메일").fill(E2E_USER_EMAIL)
-  await page.getByLabel("비밀번호").fill(E2E_USER_PASSWORD)
-  await page.getByRole("button", { name: "로그인" }).click()
-  await expect(page.getByRole("button", { name: "도움 시작하기" })).toBeVisible()
+// 사용자가 실제로 보는 '사진 올리기' 버튼을 눌러 파일 선택 창에서 사진을 고른다.
+// 숨은 파일 입력에 직접 넣지 않으므로, 버튼이 화면에 보이지 않으면 여기서 실패한다 (F2)
+async function choosePhoto(page: Page, buttonText: "사진 올리기" | "사진 바꾸기", file: string) {
+  const [chooser] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.getByText(buttonText, { exact: true }).click(),
+  ])
+  await chooser.setFiles(fixture(file))
 }
 
-test("S5 지난 도움 기록을 다시 본다", async ({ page }) => {
-  await logIn(page)
+// 다른 흐름이 남긴 기록에 기대지 않도록 매번 새 계정으로 가입해, 이번 요청으로 생긴 기록만 확인한다
+test("S5 새로 가입해 물어본 뒤 도움 기록에서 이번 질문과 안내를 다시 본다", async ({ page }) => {
+  const email = `e2e-s5-${Date.now()}@example.com`
+
+  await page.goto("/")
+
+  await page.getByRole("button", { name: "가입하기" }).click()
+
+  await page.getByLabel("이메일").fill(email)
+  await page.getByLabel("비밀번호").fill("loopthon-2026")
+  await page.getByRole("button", { name: "가입", exact: true }).click()
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
   await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
 
-  await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-step1.png"))
+  await choosePhoto(page, "사진 올리기", "mock-step1.png")
 
   await page.getByLabel("질문 입력").fill("병원 예약하고 싶어")
 
   await page.getByRole("button", { name: "물어보기" }).click()
-  await expect(page.getByTestId("guide-text")).not.toBeEmpty(AI_WAIT)
+  const guideText = page.getByTestId("guide-text")
+  await expect(guideText).not.toBeEmpty(AI_WAIT)
+  const instruction = ((await guideText.textContent()) ?? "").trim()
+  expect(instruction).not.toBe("")
 
   await page.getByRole("button", { name: "설정" }).click()
 
   await page.getByRole("button", { name: "도움 기록" }).click()
 
-  await expect(page.getByRole("listitem").filter({ hasText: "병원 예약하고 싶어" }).first()).toBeVisible()
+  // 새 계정이라 이번 요청으로 생긴 항목 하나만 있어야 한다
+  const items = page.getByRole("listitem")
+  await expect(items).toHaveCount(1)
+  await expect(items.first()).toContainText("병원 예약하고 싶어")
+  await expect(items.first()).toContainText(instruction)
 })

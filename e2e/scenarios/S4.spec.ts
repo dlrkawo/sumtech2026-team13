@@ -13,6 +13,16 @@ async function logIn(page: Page) {
   await expect(page.getByRole("button", { name: "도움 시작하기" })).toBeVisible()
 }
 
+// 사용자가 실제로 보는 '사진 올리기'·'사진 바꾸기' 버튼을 눌러 파일 선택 창에서 사진을 고른다.
+// 숨은 파일 입력에 직접 넣지 않으므로, 버튼이 화면에 보이지 않으면 여기서 실패한다 (F2)
+async function choosePhoto(page: Page, buttonText: "사진 올리기" | "사진 바꾸기", file: string) {
+  const [chooser] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.getByText(buttonText, { exact: true }).click(),
+  ])
+  await chooser.setFiles(fixture(file))
+}
+
 test("S4 개인정보 제출 버튼 앞에서 경고를 본다", async ({ page }) => {
   await logIn(page)
 
@@ -20,7 +30,7 @@ test("S4 개인정보 제출 버튼 앞에서 경고를 본다", async ({ page }
 
   await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
 
-  await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-unclear.png"))
+  await choosePhoto(page, "사진 올리기", "mock-unclear.png")
 
   await page.getByLabel("질문 입력").fill("예약 마무리하고 싶어")
 
