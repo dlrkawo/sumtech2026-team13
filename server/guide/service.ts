@@ -12,31 +12,40 @@ import { readScreenImage } from "./screen-image";
 const MODEL = "anthropic/claude-sonnet-5.5";
 // 100만 토큰당 USD (입력, 출력) — 팀 대시보드 기준. 호출마다 비용을 로그로 남겨 예산을 확인한다
 const PRICE_PER_MILLION = { input: 2.0, output: 10.0 };
+// 답의 형식이 우연히 깨졌을 때만 한 번 더 묻는다. max_tokens에 걸려 잘린 답은 다시 물어도 또 잘리므로 다시 묻지 않는다
+const MAX_ATTEMPTS = 2;
 
 export async function createGuide(
   userId: number,
   { image, question, previousInstruction }: GuideRequest,
 ): Promise<GuideResponse> {
   const screen = readScreenImage(image);
+  const content = [
+    { type: "image_url" as const, image_url: { url: image } },
+    { type: "text" as const, text: buildGuidePrompt(question, screen.width, screen.height, previousInstruction) },
+  ];
 
-  const result = await createChatCompletion({
-    model: MODEL,
-    content: [
-      { type: "image_url", image_url: { url: image } },
-      { type: "text", text: buildGuidePrompt(question, screen.width, screen.height, previousInstruction) },
-    ],
-  });
+  let answer: GuideResponse | null = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const result = await createChatCompletion({ model: MODEL, content });
 
-  const cost =
-    (result.promptTokens * PRICE_PER_MILLION.input + result.completionTokens * PRICE_PER_MILLION.output) / 1e6;
-  console.info(`[guide] tokens in=${result.promptTokens} out=${result.completionTokens} cost≈$${cost.toFixed(4)}`);
+    const cost =
+      (result.promptTokens * PRICE_PER_MILLION.input + result.completionTokens * PRICE_PER_MILLION.output) / 1e6;
+    console.info(
+      `[guide] attempt=${attempt} tokens in=${result.promptTokens} out=${result.completionTokens} ` +
+        `reasoning=${result.reasoningTokens} finish=${result.finishReason} cost≈$${cost.toFixed(4)}`,
+    );
 
-  const answer = parseGuideAnswer(result.text, screen.width, screen.height, question);
-  if (!answer) {
+    answer = parseGuideAnswer(result.text, screen.width, screen.height, question);
+    if (answer) break;
+
     // AI 응답에는 화면에서 읽은 개인정보가 섞일 수 있어 내용은 로그에 남기지 않는다
-    console.error(`[guide] unparsable AI answer (length=${result.text.length})`);
-    throw aiFailed();
+    console.error(
+      `[guide] unparsable AI answer attempt=${attempt} (length=${result.text.length}, finish=${result.finishReason})`,
+    );
+    if (result.finishReason === "length") break;
   }
+  if (!answer) throw aiFailed();
 
   const { riskWarning } = await getSettings(userId);
   const response = riskWarning ? answer : { ...answer, risk: null };

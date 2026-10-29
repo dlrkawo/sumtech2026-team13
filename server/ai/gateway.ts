@@ -8,8 +8,10 @@ import { AppError } from "../errors";
 const GATEWAY_URL = "https://ai-gateway.vercel.sh/v1/chat/completions";
 
 // 팀 전체 예산이 $10라 호출 하나의 응답 길이와 대기 시간을 제한한다.
+// max_tokens에는 보이지 않는 추론(생각) 토큰도 포함된다. 400이면 위험 화면처럼 판단이 어려운 화면에서
+// 추론에 토큰을 다 쓰고 JSON이 잘렸다 (out=400, 답 41자). 1200이면 정상(out≈416). 출력은 쓴 만큼만 과금된다.
 // E2E 흐름 하나(분석 최대 2번)가 1분 안에 끝나야 하므로 타임아웃은 25초
-export const DEFAULT_MAX_TOKENS = 400;
+export const DEFAULT_MAX_TOKENS = 1200;
 export const DEFAULT_TIMEOUT_MS = 25_000;
 
 const aiErrors = {
@@ -35,6 +37,10 @@ export interface ChatCompletionResult {
   text: string;
   promptTokens: number;
   completionTokens: number;
+  // 추론(생각)에 쓴 토큰. completionTokens에 포함되어 있다. 응답에 없으면 0
+  reasoningTokens: number;
+  // "length"면 max_tokens에 걸려 답이 잘린 것
+  finishReason: string | null;
 }
 
 export async function createChatCompletion({
@@ -84,6 +90,8 @@ export async function createChatCompletion({
     text,
     promptTokens: data.usage?.prompt_tokens ?? 0,
     completionTokens: data.usage?.completion_tokens ?? 0,
+    reasoningTokens: data.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
+    finishReason: data.choices[0].finish_reason ?? null,
   };
 }
 
