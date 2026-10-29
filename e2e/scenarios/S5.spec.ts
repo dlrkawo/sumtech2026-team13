@@ -18,6 +18,8 @@ test("S5 지난 도움 기록을 다시 본다", async ({ page }) => {
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
+  await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
+
   await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-step1.png"))
 
   await page.getByLabel("질문 입력").fill("병원 예약하고 싶어")

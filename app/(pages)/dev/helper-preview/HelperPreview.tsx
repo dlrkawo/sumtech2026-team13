@@ -22,6 +22,7 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
         isAnswering={mock === "loading"}
         guide={guide}
         guideImage={image}
+        step={1}
         error={null}
         notice={null}
         showEdge={false}

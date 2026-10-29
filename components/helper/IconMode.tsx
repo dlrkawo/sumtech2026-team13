@@ -10,7 +10,8 @@ import type { HelperStatus } from "./StatusIcon";
 import { FOCUS_RING } from "./styles";
 import type { HelperNotice } from "./useHelperSession";
 
-// 아이콘 모드 (v6): 오른쪽 아래에 말풍선 · ▶■상태 막대 + 캐릭터 · 입력창 + 사진 올리기 + 설정
+// 아이콘 모드 (v6): 말풍선 · ▶■상태 막대 + 캐릭터 · 입력창 + 사진 올리기 + 설정을 Landing(왼쪽 소개 영역) 오른쪽에 세로로 쌓는다.
+// 미니 브라우저 창 기준: 좁을 때는 Landing 아래로 이어지는 세로형, sm부터는 오른쪽 안내·조작 영역(가로형, Landing과 같은 300px 기준)
 // 보여 줄 값과 버튼 동작은 모두 props로 받는다. 화면 공유·안내 요청·음성 인식은 바깥(HelperApp)에서 한다.
 // '설정' 버튼은 항상 보인다 (scenarios.yaml 화면 흐름)
 export interface IconModeProps {
@@ -21,6 +22,8 @@ export interface IconModeProps {
   isAnswering: boolean;
   guide: GuideResponse | null;
   guideImage: string | null;
+  // 같은 질문을 이어서 물을 때마다 +1 (v2 S2·S3)
+  step: number;
   error: { message: string; canRetry: boolean } | null;
   notice: HelperNotice | null;
   showEdge: boolean;
@@ -47,6 +50,7 @@ export function IconMode(props: IconModeProps) {
     isLoading: props.isAnswering,
     guide: props.guide,
     image: props.guideImage,
+    step: props.step,
     error: props.error,
     notice: props.notice,
     idleText: idleText(props),
@@ -58,37 +62,37 @@ export function IconMode(props: IconModeProps) {
   return (
     <>
       {props.showEdge && <EdgeFrame />}
-      <div className="fixed right-[16px] bottom-[16px] z-30 flex max-w-[calc(100vw-32px)] flex-col items-end gap-[10px]">
-        {props.isBubbleOpen && <AnswerBubble {...bubble} />}
-        <div className="flex items-end gap-[6px]">
-          <ControlPill status={status} isOn={props.isOn} onPlay={props.onStart} onStop={props.onStop} />
+      {/* 화면 사진 올리기: 화면에는 보이지 않지만(자동 테스트용 길) 입력은 그대로 둔다 */}
+      <div className="sr-only">
+        <PhotoUpload hasPhoto={props.hasPhoto} onPick={props.onPickPhoto} />
+      </div>
+      {/* 왼쪽 소개 영역(Landing)과 짝을 이루는 오른쪽 안내·조작 영역.
+          처음엔 캐릭터(+설정)만 보이고, 캐릭터를 누르면 안내·시작/멈추기·입력창이 그 아래로 펼쳐진다.
+          좁을 때는 Landing 아래로 이어지는 한 화면(세로형), sm부터는 Landing 폭(300px)만큼 오른쪽에 고정(가로형) */}
+      <div
+        className="z-30 flex w-full flex-col items-center gap-[14px] overflow-y-auto px-[16px] pt-[6px] pb-[20px]
+          sm:fixed sm:inset-y-0 sm:left-[300px] sm:right-0 sm:w-auto sm:items-center sm:justify-center sm:gap-[18px] sm:px-[28px] sm:py-[24px]"
+      >
+        <div className="flex items-center gap-[10px]">
           <button
             type="button"
-            aria-label={props.isBubbleOpen ? "곁길 도우미, 답변 접기" : "곁길 도우미, 답변 펼치기"}
+            aria-label={props.isBubbleOpen ? "곁길 도우미 닫기" : "곁길 도우미 열기"}
             aria-expanded={props.isBubbleOpen}
             onClick={() => props.onToggleBubble(!props.isBubbleOpen)}
-            className={`rounded-[24px] drop-shadow-[0_8px_12px_rgba(0,0,0,.22)] ${FOCUS_RING}`}
+            className={`shrink-0 rounded-[24px] drop-shadow-[0_8px_12px_rgba(0,0,0,.22)] ${FOCUS_RING}`}
           >
-            <PetChar mood={mood} sign={sign} size={124} />
+            <PetChar mood={mood} sign={sign} size={88} />
           </button>
-        </div>
-        <div className="flex flex-wrap items-start justify-end gap-[10px]">
-          <PromptBar
-            question={props.question}
-            isAnswering={props.isAnswering}
-            voice={props.voice}
-            onQuestionChange={props.onQuestionChange}
-            onAsk={props.onAsk}
-          />
-          <PhotoUpload hasPhoto={props.hasPhoto} onPick={props.onPickPhoto} />
+          {/* '설정' 버튼은 항상 보인다 (scenarios.yaml 화면 흐름) */}
           <button
             type="button"
+            aria-label="설정"
             onClick={props.onOpenSettings}
-            className={`flex min-h-[56px] items-center gap-[8px] rounded-[30px] border-2 border-[#C9C6BE] bg-white px-[18px] text-[20px] font-bold text-[#16191D] shadow-[0_8px_18px_rgba(0,0,0,.14)] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
+            className={`flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full border-2 border-[#C9C6BE] bg-white text-[#16191D] shadow-[0_8px_18px_rgba(0,0,0,.14)] hover:bg-[#F0EFEB] ${FOCUS_RING}`}
           >
             <svg
-              width="24"
-              height="24"
+              width="26"
+              height="26"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -98,9 +102,25 @@ export function IconMode(props: IconModeProps) {
               <circle cx="12" cy="12" r="3.2" />
               <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
             </svg>
-            설정
           </button>
         </div>
+        {props.isBubbleOpen && (
+          <>
+            <AnswerBubble {...bubble} />
+            <div className="flex w-full max-w-[420px] items-center justify-center sm:max-w-none">
+              <ControlPill status={status} isOn={props.isOn} onPlay={props.onStart} onStop={props.onStop} />
+            </div>
+            <div className="w-full max-w-[420px] sm:max-w-none">
+              <PromptBar
+                question={props.question}
+                isAnswering={props.isAnswering}
+                voice={props.voice}
+                onQuestionChange={props.onQuestionChange}
+                onAsk={props.onAsk}
+              />
+            </div>
+          </>
+        )}
       </div>
     </>
   );

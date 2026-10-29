@@ -71,6 +71,7 @@ export function HelperApp() {
           isAnswering={session.isAnswering}
           guide={session.guide}
           guideImage={session.shownImage}
+          step={session.step}
           error={session.guideError}
           notice={session.notice}
           showEdge={(settings?.edgeDisplay ?? true) && session.isSharing}

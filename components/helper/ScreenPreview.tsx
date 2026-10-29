@@ -21,7 +21,15 @@ export function ScreenPreview({ image, target }: { image: string; target: GuideT
             width: `${target.width * 100}%`,
             height: `${target.height * 100}%`,
           }}
-        />
+        >
+          {/* 하이라이트 박스 안쪽 위에 둔다. 사진 바로 바깥(overflow-hidden)에 두면 화면 위쪽 근처일 때 가려질 수 있다 */}
+          <span
+            aria-hidden="true"
+            className="absolute top-[2px] left-[2px] whitespace-nowrap rounded-[6px] bg-[#C8102E] px-[6px] py-[1px] text-[13px] font-bold text-white"
+          >
+            여기를 누르세요
+          </span>
+        </div>
       )}
     </div>
   );

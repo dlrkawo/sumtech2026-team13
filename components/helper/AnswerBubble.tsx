@@ -8,6 +8,7 @@ import type { HelperNotice } from "./useHelperSession";
 // 캐릭터 위 말풍선. 안내 문장·누를 곳 사진·위험 경고를 본 화면에 띄운다 (E2E는 본 화면에서 확인)
 // 보여 줄 내용은 모두 props로 받는다. 안내 값 모양은 서버의 GuideResponse 그대로다.
 //   data-testid: guide-text(안내 문장), click-highlight(누를 곳, ScreenPreview)
+// v3 시나리오(S1~S6)가 그대로 찾는 글자다. 단계 번호(step)는 이 문구 옆에 작게 따로 보여 준다.
 const STATUS_LABEL: Record<GuideStatus, string> = {
   IN_PROGRESS: "누를 곳을 찾았어요",
   DONE: "다 됐어요",
@@ -21,6 +22,8 @@ export interface AnswerBubbleProps {
   guide: GuideResponse | null;
   // 물어볼 때 보낸 화면 사진(data URL). 이 위에 guide.target을 그린다
   image: string | null;
+  // 같은 질문을 이어서 물을 때마다 +1 (v2 S2·S3)
+  step: number;
   error: { message: string; canRetry: boolean } | null;
   notice: HelperNotice | null;
   // 아직 아무것도 묻지 않았을 때 보여 줄 말
@@ -35,6 +38,7 @@ export function AnswerBubble({
   isLoading,
   guide,
   image,
+  step,
   error,
   notice,
   idleText,
@@ -48,7 +52,7 @@ export function AnswerBubble({
   return (
     <section
       aria-label="곁길 답변"
-      className={`flex w-[470px] max-w-[calc(100vw-32px)] flex-col break-keep overflow-hidden rounded-[28px] border-2 bg-white shadow-[0_14px_34px_rgba(0,0,0,.22)] ${isRisk ? "border-[#C8102E]" : "border-[#1D4E89]"}`}
+      className={`flex w-full max-w-[420px] flex-col break-keep overflow-hidden rounded-[28px] border-2 bg-white shadow-[0_14px_34px_rgba(0,0,0,.22)] sm:max-w-[470px] ${isRisk ? "border-[#C8102E]" : "border-[#1D4E89]"}`}
     >
       <div className="flex items-center gap-[12px] border-b border-[#E6E3DC] py-[8px] pr-[12px] pl-[18px]">
         <p className="flex-1 text-[20px] font-bold text-[#1D4E89]" aria-live="polite">
@@ -62,7 +66,7 @@ export function AnswerBubble({
           접기
         </button>
       </div>
-      <div className="flex max-h-[calc(100vh-340px)] flex-col gap-[10px] [&>*]:shrink-0 overflow-y-auto px-[18px] pt-[12px] pb-[16px] text-[20px]">
+      <div className="flex max-h-[44dvh] flex-col gap-[10px] [&>*]:shrink-0 overflow-y-auto px-[18px] pt-[12px] pb-[16px] text-[20px] sm:max-h-[56dvh]">
         {isLoading && (
           <div className="flex items-center gap-[12px]">
             <span
@@ -84,7 +88,10 @@ export function AnswerBubble({
                 <span>{guide.risk.message}</span>
               </p>
             )}
-            <p className="text-[20px] font-bold text-[#1D4E89]">{STATUS_LABEL[guide.status]}</p>
+            <p className="flex items-baseline gap-[8px] text-[20px] font-bold text-[#1D4E89]">
+              <span>{STATUS_LABEL[guide.status]}</span>
+              {guide.status === "IN_PROGRESS" && <span className="text-[14px] font-normal text-[#454B53]">{step}단계</span>}
+            </p>
             <p data-testid="guide-text" className="text-[24px] leading-[1.45] font-bold">
               {guide.instruction}
             </p>
