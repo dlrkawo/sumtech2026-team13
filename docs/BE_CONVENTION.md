@@ -114,6 +114,7 @@ route.ts → service → repository → DB (server/db/client.ts의 query)
 - 예: `throw new AppError(409, "AUTH_EMAIL_TAKEN", "이미 가입한 이메일이에요. 로그인해 주세요.")` (자주 쓰는 것은 `server/errors.ts`의 `errors.validation()`, `errors.authRequired()`)
 - 에러 코드: `<DOMAIN>_<REASON>` UPPER_SNAKE_CASE, 메시지는 사용자에게 그대로 보여줘도 되는 한국어
 - zod 검증 실패는 400 + `VALIDATION_ERROR`, 알 수 없는 오류는 500 + `INTERNAL_SERVER_ERROR` (상세 내용은 서버 로그에만)
+- 실패 응답에는 `retryable`(같은 요청을 다시 보내면 될 수 있는지)이 붙는다. 기본은 상태 코드로 정함(429·5xx → `true`, 나머지 → `false`, `server/errors.ts`의 `isRetryableStatus`). 다르게 해야 하면 `new AppError(status, code, message, retryable)`로 지정
 - 새 에러 코드는 아래 12번 목록에 추가
 
 ## 7. DB 규칙

@@ -17,12 +17,14 @@ const MAX_ATTEMPTS = 2;
 
 export async function createGuide(
   userId: number,
-  { image, question, previousInstruction }: GuideRequest,
+  { image, question, previousInstruction, previousInstructions }: GuideRequest,
 ): Promise<GuideResponse> {
   const screen = readScreenImage(image);
+  // 지난 안내 목록이 오면 그것을, 없으면 바로 전 한 줄을 쓴다 (예전 FE 요청 그대로 동작)
+  const history = previousInstructions?.length ? previousInstructions : previousInstruction ? [previousInstruction] : [];
   const content = [
     { type: "image_url" as const, image_url: { url: image } },
-    { type: "text" as const, text: buildGuidePrompt(question, screen.width, screen.height, previousInstruction) },
+    { type: "text" as const, text: buildGuidePrompt(question, screen.width, screen.height, history) },
   ];
 
   let answer: GuideResponse | null = null;

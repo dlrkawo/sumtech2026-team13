@@ -22,7 +22,7 @@ const audioErrors = {
 
 export async function createVoiceGuide(
   userId: number,
-  { image, audio, previousInstruction }: VoiceGuideRequest,
+  { image, audio, previousInstruction, previousInstructions }: VoiceGuideRequest,
 ): Promise<VoiceGuideResponse> {
   // 글자로 바꾸는 데 비용이 들기 전에 이미지도 먼저 검사한다
   readScreenImage(image);
@@ -44,6 +44,6 @@ export async function createVoiceGuide(
   const question = transcription.text.trim().slice(0, MAX_QUESTION_LENGTH);
   if (!question) throw audioErrors.noSpeech();
 
-  const guide = await createGuide(userId, { image, question, previousInstruction });
+  const guide = await createGuide(userId, { image, question, previousInstruction, previousInstructions });
   return { question, ...guide };
 }
