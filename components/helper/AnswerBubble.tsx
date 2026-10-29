@@ -116,7 +116,7 @@ export function AnswerBubble({
           <div className="flex items-center gap-[12px]">
             <span
               aria-hidden="true"
-              className="h-[30px] w-[30px] shrink-0 animate-spin rounded-full border-[5px] border-[#D5DEEA] border-t-[#1D4E89]"
+              className="h-[30px] w-[30px] shrink-0 animate-spin rounded-full border-[5px] border-[#D5DEEA] border-t-[#1D4E89] motion-reduce:animate-none"
             />
             <p className="text-[22px] font-bold">화면을 보고 답을 찾고 있어요</p>
           </div>

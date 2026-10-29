@@ -41,7 +41,7 @@ export function HelperApp() {
   // 설정 창을 오가도 화면 공유·안내가 이어지도록 여기서 한 번만 만든다
   const session = useHelperSession({ onNeedLogin });
 
-  // 말로 들은 문장은 입력창에 적고 바로 물어본다 (S8)
+  // 말로 들은 문장은 입력창에 적고 바로 물어본다 (음성은 핵심 흐름 밖, problem.yaml solution_paths 보류 항목)
   const { ask } = session;
   const onHeard = useCallback(
     (text: string) => {
