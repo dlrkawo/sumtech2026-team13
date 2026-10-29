@@ -5,8 +5,9 @@ import { FOCUS_RING } from "./styles";
 // 버튼의 접근성 이름은 '▶' '■' 그대로 둔다 (E2E: getByRole("button", { name: "▶" }))
 // 상태 글자는 docs/scenarios.yaml과 같다: '멈춤' / '보고 있어요' / '답변 중'
 
+// 글자는 본문 최소 20px (FE_CONVENTION 9번). 폭은 '멈추기'·'보고 있어요'가 20px bold로 한 줄에 들어가는 크기
 const PILL_BUTTON =
-  "flex min-h-[56px] w-[68px] flex-col items-center justify-center gap-[1px] rounded-[28px] text-[14px] font-bold hover:bg-[#F0EFEB] disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[#A3A8AE] " +
+  "flex min-h-[56px] w-[88px] flex-col items-center justify-center gap-[1px] rounded-[28px] text-[20px] font-bold hover:bg-[#F0EFEB] disabled:cursor-not-allowed disabled:bg-transparent disabled:text-[#A3A8AE] " +
   FOCUS_RING;
 
 const STATUS_TEXT: Record<HelperStatus, string> = {
@@ -68,7 +69,7 @@ export function ControlPill({
       <span aria-hidden="true" className="h-[32px] w-[2px] bg-[#E6E3DC]" />
       <div
         role="status"
-        className={`flex min-h-[56px] w-[80px] flex-col items-center justify-center gap-[1px] rounded-[28px] text-[14px] font-bold ${STATUS_COLOR[status]}`}
+        className={`flex min-h-[56px] w-[124px] flex-col items-center justify-center gap-[1px] rounded-[28px] text-[20px] font-bold ${STATUS_COLOR[status]}`}
       >
         <StatusIcon status={status} />
         <span>{STATUS_TEXT[status]}</span>
