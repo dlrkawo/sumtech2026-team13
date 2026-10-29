@@ -23,14 +23,17 @@ const STATUS_COLOR: Record<HelperStatus, string> = {
   answering: "text-[#1D4E89] bg-[#E7EEF7]",
 };
 
+// canPlay: ▶를 누를 수 있음 (공유 중·고르는 중이 아님) / isOn: 도움이 켜져 있어 ■로 끌 수 있음
 export function ControlPill({
   status,
   isOn,
+  canPlay,
   onPlay,
   onStop,
 }: {
   status: HelperStatus;
   isOn: boolean;
+  canPlay: boolean;
   onPlay: () => void;
   onStop: () => void;
 }) {
@@ -43,9 +46,9 @@ export function ControlPill({
       <button
         type="button"
         aria-label="▶"
-        disabled={isOn}
+        disabled={!canPlay}
         onClick={onPlay}
-        className={`${PILL_BUTTON} ${isOn ? "" : "text-[#1D4E89]"}`}
+        className={`${PILL_BUTTON} ${canPlay ? "text-[#1D4E89]" : ""}`}
       >
         <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M7 4.5v15l12.5-7.5z" fill="currentColor" />

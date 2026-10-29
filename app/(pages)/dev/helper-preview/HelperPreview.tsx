@@ -36,6 +36,8 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
       <Landing />
       <IconMode
         isOn
+        canPlay={false}
+        isPicking={false}
         hasScreen
         hasPhoto
         isAnswering={mock === "loading"}
