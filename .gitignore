@@ -1,0 +1,26 @@
+# 비밀값·환경변수
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 의존성·빌드 산출물
+node_modules/
+.next/
+dist/
+build/
+out/
+coverage/
+
+# 테스트 결과
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+test-results/
+playwright-report/
+
+# 기타
+.DS_Store
+*.log
+.vercel/
