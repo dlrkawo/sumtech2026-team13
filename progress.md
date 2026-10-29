@@ -4,8 +4,8 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 
 ## 현재 상태
 
-- 실제 서비스 저장소 폴더: Agent 클라우드 작업 공간의 `sumtech2026-team13` (원격 https://github.com/dlrkawo/sumtech2026-team13)
-- 현재 단계 / 다음 행동: 1단계 마무리(준비 파일 push) → 학생이 이어 가자고 하면 2단계 종이 기록 받기
+- 실제 서비스 저장소 폴더: 학생 맥 `OneDrive-개인/dlrkawo/2026 4-2/SUMTECH/be` (원격 https://github.com/dlrkawo/sumtech2026-team13). Agent는 이 폴더에서 파일을 만들고, push는 학생이 터미널에서 함(Agent 세션에 저장소 쓰기 권한 없음)
+- 현재 단계 / 다음 행동: 1단계 완료. 2단계 종이 기록 대기(학생이 사진을 나중에 첨부하기로 함). 그동안 키트 e2e/ 폴더를 저장소에 복사함(흐름별 spec은 scenarios.yaml 확정 후 작성)
 - 학생에게 확인할 내용: 2단계 시작 시 종이 문제정의 기록
 
 ## 1. GitHub 준비
@@ -17,16 +17,16 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 - [x] 팀 코드로 대시보드 API 로그인(`data.teamId`), 레포 URL을 HTTP로 저장(`data.team.repoUrl`) 확인. 팀 코드로는 화면에 들어갈 수 없음
 - [x] 사이트에 등록한 레포를 실제 작업 폴더로 clone, remote·기본 브랜치 확인
 - [x] .gitignore / .env.example / README 준비(`.env`·`node_modules/`·`.next/`·`dist/`·`build/` 제외, 큰 데이터 파일 커밋 안 함. 파일이 너무 많으면 저장소를 읽지 못함)
-- [ ] 준비 파일 commit/push 확인
+- [x] 준비 파일 commit/push 확인 (fd7deb9, 학생이 맥에서 push)
 - [x] 앱 설치 후 읽기 권한 확인 (5분 자동 재확인, 즉시 확인은 같은 레포 URL 다시 저장)
-- 저장소 URL / 기본 브랜치 / commit SHA: https://github.com/dlrkawo/sumtech2026-team13 / main / 첫 커밋 74542f8, 준비 파일 커밋은 push 후 기록
+- 저장소 URL / 기본 브랜치 / commit SHA: https://github.com/dlrkawo/sumtech2026-team13 / main / 첫 커밋 74542f8, 준비 파일 커밋 fd7deb9
 - 사이트 등록 결과 / loopthon-bot 설치·접근 상태: 팀 ID 13, PUT /api/teams/13/repo → ok:true, repoUrl 일치. 앱 설치 후 재저장 결과 check.result = ok (2026-10-29)
 - 참고: Agent 클라우드 작업 공간에서 대시보드 주소는 네트워크 정책상 막혀 있어, 앱 안의 브라우저에서 HTTP 요청을 보냄
 
 ## 2. 문제정의 기록 → 문제 다지기 → 해법 찾기 → 기능 명세
 
-- [ ] 종이 기록 수령(학생이 채팅에 옮겨 적거나 사진 첨부)
-- [ ] problem.example.yaml을 참고해 docs/problem.yaml 작성
+- [x] 종이 기록 수령(학생이 채팅에 옮겨 적거나 사진 첨부)
+- [x] problem.example.yaml을 참고해 docs/problem.yaml 작성
 - [ ] 원문 의도와 불명확한 내용 확인, 없는 근거는 빈칸 유지
 - [ ] 2-A 문제 다지기: 캔버스 칸을 질문으로 다짐(Agent가 해법·후보·예시 답을 먼저 내지 않음, 학생 답이 없는 칸은 "학생 답 대기")
 - [ ] 팀원 경험을 언제·어떤 장면·어떻게 대응했는지까지 experiences에 기록
@@ -43,7 +43,7 @@ Agent가 서비스 저장소 루트의 `progress.md`로 복사해 이어 쓴다(
 - [ ] 사용자 핵심 흐름 3~8개를 scenarios.example.yaml 참고해 docs/scenarios.yaml에 작성(steps는 화면의 메뉴·버튼 이름으로 한 줄에 한 동작, 로그인 흐름은 account 지정), YAML 파서로 형식 확인 후 기본 브랜치 push
 - [ ] 서비스의 AI 호출 필요 여부 확인
 - [ ] README 등 기존 문서에 확인된 구현 설계 기록, 기본 브랜치 push
-- 문제정의·구현 설계 링크 / commit SHA / 확인할 빈칸:
+- 문제정의·구현 설계 링크 / commit SHA / 확인할 빈칸: https://github.com/dlrkawo/sumtech2026-team13/blob/main/docs/problem.yaml / 빈칸(학생 답 대기): statement, experiences(실제 겪은 장면), sources(노인실태조사 67.2% 원문 주소), solution_paths·why_ours(2-B), features(2-C). 종이 사진과 학생 정리본을 합쳐 옮김(대안은 네 가지로 분리)
 
 ## 3. 최소 화면 docker 실행·CI·첫 배포
 
