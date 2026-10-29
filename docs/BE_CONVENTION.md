@@ -144,6 +144,7 @@ route.ts → service → repository → DB (server/db/client.ts의 query)
 ## 10. Git 규칙
 
 - `main`은 **PR로만** 바뀜 (룰셋: 직접 push·강제 push 금지, 필수 검사 `check`·`docs` 통과 후 머지). 머지되면 CI `scenarios`와 Vercel 배포가 돎 → **`main`은 항상 실행되는 상태 유지**
+  - Vercel은 `main`만 배포하고 PR·다른 브랜치 미리보기 배포는 하지 않음 (`vercel.json`의 `git.deploymentEnabled`, Hobby 하루 배포 100번 한도 때문)
 - 브랜치: `feat/be-<기능>`, `fix/be-<내용>` → `main`으로 PR
 - 커밋: `feat:` / `fix:` / `refactor:` / `docs:` / `chore:` (예: `feat: 화면 안내 요청 API 구현`)
 - 작업 순서: `main` pull → 브랜치 생성 → 작업 → `npm run lint`·`npm run typecheck` → (API·화면 흐름을 바꿨으면) `bash scripts/e2e-local.sh` → push → PR → 다른 BE가 확인 후 머지
