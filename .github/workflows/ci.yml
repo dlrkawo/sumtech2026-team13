@@ -1,4 +1,4 @@
-# 앱 코드 검사: 린트 · 타입 검사 · 빌드 (키트 3-1a의 5: 프로젝트에 맞는 검사)
+# 앱 코드 검사: 키트 문서 형식 · 린트 · 타입 검사 · 빌드 (키트 3-1a의 5: 프로젝트에 맞는 검사)
 # 흐름 E2E는 scenarios.yml이 따로 돈다.
 name: ci
 
@@ -9,6 +9,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  # docs/problem.yaml, docs/scenarios.yaml이 키트 형식(대시보드가 읽는 키 이름)을 지키는지 검사
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Kit docs format
+        run: |
+          python3 -c "import yaml" 2>/dev/null || python3 -m pip install --quiet --break-system-packages pyyaml
+          python3 scripts/check_docs.py
+
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
