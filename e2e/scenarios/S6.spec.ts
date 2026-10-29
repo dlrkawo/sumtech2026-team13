@@ -33,7 +33,8 @@ test("S6 새로 가입해 기록 저장을 끄고 물어보면 기록이 남지 
   ])
   expect(saved.ok()).toBe(true)
   await expect(saveHistory).not.toBeChecked()
-  await expect(page.getByRole("alert")).toHaveCount(0)
+  // 설정 창 안의 오류 문구만 센다. 페이지 전체로 세면 Next.js가 늘 넣어 두는 빈 route announcer(role="alert")까지 걸린다
+  await expect(page.getByRole("dialog", { name: "설정" }).getByRole("alert")).toHaveCount(0)
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
