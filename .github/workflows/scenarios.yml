@@ -9,6 +9,13 @@ name: scenarios
 on:
   push:
     branches: [main]
+    # 앱·E2E에 영향이 없는 문서·실험 폴더만 바뀐 머지는 검사하지 않는다 (새 폴더가 생겨도 빠뜨리지 않게 제외 목록으로 둠)
+    paths-ignore:
+      - "docs/**"
+      - "trash/**"
+      - "**/*.md"
+      - "progress.md"
+      - "scripts/check_docs.py"
   workflow_dispatch:
 
 # main에 연달아 push하면 이전 실행은 취소하고 최신 commit만 검사한다 (실행이 쌓여 오래 걸리는 것 방지)
@@ -24,6 +31,8 @@ jobs:
       E2E_BASE_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v7
+      # Docker 레이어 캐시(buildx + type=gha)는 측정해 보니 이득이 없어 쓰지 않는다 (ci/scenarios-cache PR 참고):
+      # 캐시를 다 맞혀도 레이어 받기·올리기에 빌드 시간(약 33초)만큼 걸리고 buildx 준비 시간이 더 붙는다.
       - name: Start app and database
         env:
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
@@ -51,6 +60,8 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
+      # Playwright 브라우저 캐시도 측정해 보니 이득이 없어 쓰지 않는다: 설치 시간 대부분이 브라우저 다운로드(약 8초)가 아니라
+      # --with-deps의 시스템 패키지 확인이라, 캐시를 맞혀도 복원 3초 + 설치 22초로 거의 같다.
       - name: Run scenario E2E
         working-directory: e2e
         run: |
