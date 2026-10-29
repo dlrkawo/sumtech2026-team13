@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test"
 
-// ※ 라벨·버튼 이름은 기획 문서(docs/scenarios.yaml) 기준이다. 실제 화면 문구가 정해지면 같이 맞춘다.
+// ※ 라벨·버튼 이름은 docs/scenarios.yaml 기준이다. 화면 문구를 바꾸면 이 spec도 같은 커밋에서 고친다.
 
 test("S1 가입하고 설정 창에 들어간다", async ({ page }) => {
   // 같은 DB에서 여러 번 돌아도 겹치지 않도록 실행마다 다른 이메일로 가입한다
-  const email = `e2e-${Date.now()}@example.com`
+  const email = `e2e-s1-${Date.now()}@example.com`
 
   // 1. 사이트에 접속한다
   await page.goto("/")
