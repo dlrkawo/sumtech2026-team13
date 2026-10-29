@@ -7,6 +7,8 @@
 
 실행: python3 scripts/check_docs.py   (오류가 있으면 종료 코드 1)
 """
+from __future__ import annotations  # 구버전 Python(3.8 등)에서도 list[str] 같은 타입 표기가 동작하도록
+
 import re
 import sys
 from pathlib import Path
