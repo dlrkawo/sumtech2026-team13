@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// 말로 질문하기 (S8). 브라우저의 SpeechRecognition(ko-KR)을 쓴다.
+// 말로 질문하기 (브라우저 마이크는 수동 확인). 브라우저의 SpeechRecognition(ko-KR)을 쓴다.
 // 지원하지 않는 브라우저(파이어폭스 등)·마이크 거부일 때는 멈추지 않고 글로 적게 안내한다 (FE_CONVENTION.md 10번)
 
 // TS 기본 타입에 없는 브라우저도 있어 필요한 부분만 적는다

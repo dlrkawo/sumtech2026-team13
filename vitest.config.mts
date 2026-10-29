@@ -2,7 +2,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "vitest/config";
 
-// 단위 테스트 (순수 함수만: lib/errors·lib/image·server/guide/prompt·server/guide/schema).
+// 단위 테스트: 순수 함수 및 모의 브라우저·API를 사용하는 React 상태 회귀 테스트.
 // 흐름 E2E(e2e/)와 별개이며, 앱·DB·AI를 띄우지 않는다. 실행: npm test
 export default defineConfig({
   resolve: {

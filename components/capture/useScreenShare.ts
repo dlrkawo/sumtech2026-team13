@@ -82,6 +82,8 @@ export function useScreenShare() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const isStartingRef = useRef(false);
   const isMountedRef = useRef(true);
+  // getDisplayMedia 자체는 취소할 수 없으므로, 중지된 요청의 결과를 버린다.
+  const requestIdRef = useRef(0);
 
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => {
@@ -94,6 +96,8 @@ export function useScreenShare() {
   }, []);
 
   const stop = useCallback(() => {
+    requestIdRef.current += 1;
+    isStartingRef.current = false;
     release();
     setStatus("stopped");
   }, [release]);
@@ -112,18 +116,19 @@ export function useScreenShare() {
       return;
     }
 
+    const requestId = ++requestIdRef.current;
     isStartingRef.current = true;
     setStatus("starting");
     try {
       const controller = createCaptureController();
       const options = { video: true, audio: false, ...(controller && { controller }) } as DisplayMediaStreamOptions;
       const stream = await navigator.mediaDevices.getDisplayMedia(options);
-      stayOnThisTab(controller, stream);
-      // 고르는 사이 화면을 떠났으면(로그아웃 등) 바로 정리한다
-      if (!isMountedRef.current) {
+      // 고르는 사이 중지·로그아웃·언마운트되었으면 새 공유에 연결하지 않는다.
+      if (!isMountedRef.current || requestId !== requestIdRef.current) {
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
+      stayOnThisTab(controller, stream);
       streamRef.current = stream;
       // 브라우저의 '공유 중지' 버튼이나 공유하던 창을 닫은 경우
       stream.getVideoTracks().forEach((track) => {
@@ -138,11 +143,11 @@ export function useScreenShare() {
       video.play().catch((e: unknown) => console.error("[useScreenShare] 화면 재생 실패", e));
       setStatus("sharing");
     } catch (e) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || requestId !== requestIdRef.current) return;
       setError(toShareError(e));
       setStatus("idle");
     } finally {
-      isStartingRef.current = false;
+      if (requestId === requestIdRef.current) isStartingRef.current = false;
     }
   }, [onTrackEnded]);
 
@@ -165,6 +170,8 @@ export function useScreenShare() {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      requestIdRef.current += 1;
+      isStartingRef.current = false;
       release();
     };
   }, [release]);

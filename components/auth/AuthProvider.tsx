@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import type { AuthRequest, AuthUserResponse } from "@/server/auth/schema";
 import { ApiError } from "@/lib/api/types";
@@ -19,6 +19,8 @@ interface AuthContextValue {
   user: AuthUserResponse | null;
   isSubmitting: boolean;
   error: UserError | null;
+  logoutError: UserError | null;
+  isLoggingOut: boolean;
   // 성공하면 true. 실패하면 error에 화면 문구가 담긴다
   login: (body: AuthRequest) => Promise<boolean>;
   signup: (body: AuthRequest) => Promise<boolean>;
@@ -34,6 +36,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "checking" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<UserError | null>(null);
+
+  const [logoutError, setLogoutError] = useState<UserError | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const logoutPendingRef = useRef(false);
 
   // 새로고침해도 로그인 유지: 쿠키가 살아 있으면 내 정보를 받아 온다
   useEffect(() => {
@@ -57,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const submit = useCallback(async (action: () => Promise<AuthUserResponse>) => {
     setIsSubmitting(true);
     setError(null);
+    setLogoutError(null);
     try {
       const user = await action();
       setState({ status: "signedIn", user });
@@ -73,19 +80,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback((body: AuthRequest) => submit(() => authApi.signup(body)), [submit]);
 
   const logout = useCallback(async () => {
-    setIsSubmitting(true);
-    setError(null);
+    // 다시 그리기 전 연속 클릭에도 API는 한 번만 부른다.
+    if (logoutPendingRef.current) return;
+    logoutPendingRef.current = true;
+    setIsLoggingOut(true);
+    setLogoutError(null);
     try {
       await authApi.logout();
+      setError(null);
       setState({ status: "guest" });
     } catch (e) {
-      setError(toUserError(e));
+      // 실패하면 로그인 상태를 유지하고, 설정 오류와 별도로 재시도를 안내한다.
+      setLogoutError(toUserError(e));
     } finally {
-      setIsSubmitting(false);
+      logoutPendingRef.current = false;
+      setIsLoggingOut(false);
     }
   }, []);
 
-  const markSignedOut = useCallback(() => setState({ status: "guest" }), []);
+  const markSignedOut = useCallback(() => {
+    setLogoutError(null);
+    setState({ status: "guest" });
+  }, []);
   const clearError = useCallback(() => setError(null), []);
 
   const value = useMemo<AuthContextValue>(
@@ -94,13 +110,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: state.status === "signedIn" ? state.user : null,
       isSubmitting,
       error,
+      logoutError,
+      isLoggingOut,
       login,
       signup,
       logout,
       markSignedOut,
       clearError,
     }),
-    [state, isSubmitting, error, login, signup, logout, markSignedOut, clearError],
+    [state, isSubmitting, error, logoutError, isLoggingOut, login, signup, logout, markSignedOut, clearError],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

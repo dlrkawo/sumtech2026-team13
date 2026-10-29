@@ -13,7 +13,7 @@ export const DEFAULT_TRANSCRIPTION_TIMEOUT_MS = 20_000;
 // 팀 전체 예산이 $10라 호출 하나의 응답 길이와 대기 시간을 제한한다.
 // max_tokens에는 보이지 않는 추론(생각) 토큰도 포함된다. 400이면 위험 화면처럼 판단이 어려운 화면에서
 // 추론에 토큰을 다 쓰고 JSON이 잘렸다 (out=400, 답 41자). 1200이면 정상(out≈416). 출력은 쓴 만큼만 과금된다.
-// E2E 흐름 하나(분석 최대 2번)가 1분 안에 끝나야 하므로 타임아웃은 25초
+// 분석 요청 하나의 대기 시간을 25초로 제한한다. E2E는 별도로 흐름당 90초를 허용한다
 export const DEFAULT_MAX_TOKENS = 1200;
 export const DEFAULT_TIMEOUT_MS = 25_000;
 

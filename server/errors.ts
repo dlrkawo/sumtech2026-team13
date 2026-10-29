@@ -25,5 +25,4 @@ export function isRetryableStatus(status: number): boolean {
 export const errors = {
   validation: (message = "입력한 값을 다시 확인해 주세요.") => new AppError(400, "VALIDATION_ERROR", message),
   authRequired: () => new AppError(401, "AUTH_REQUIRED", "로그인이 필요해요."),
-  notFound: (code: string, message: string) => new AppError(404, code, message),
 };

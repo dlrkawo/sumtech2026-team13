@@ -21,7 +21,7 @@ export const previousInstructionSchema = instructionTextSchema.optional();
 
 // 지금까지 받은 안내 문장들 (선택, 오래된 순). 바로 전 한 줄만으로는 여러 단계짜리 일에서 AI가 앞 단계를 모르므로
 // 이어 묻기 동안 받은 안내를 순서대로 보낸다. 최근 5개만 AI에 넘긴다 (비용·프롬프트 길이)
-// previousInstruction(한 줄)도 계속 받는다. 둘 다 오면 이 목록을 쓴다
+// previousInstruction(한 줄)도 계속 받는다. 정리 후 비어 있지 않은 목록이 우선이며, 빈 목록이면 service에서 한 줄로 되돌아간다
 export const MAX_PREVIOUS_INSTRUCTIONS = 5;
 export const previousInstructionsSchema = z
   .array(instructionTextSchema, { error: "지난 안내 목록을 다시 확인해 주세요." })

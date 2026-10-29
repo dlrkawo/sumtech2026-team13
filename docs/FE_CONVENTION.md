@@ -286,7 +286,7 @@ NEXT_PUBLIC_USE_MOCK=
 - 브랜치: `feat/fe-<기능>`, `fix/fe-<내용>` (예: `feat/fe-screen-capture`) → `main`으로 PR
 - 커밋: `feat:` 기능 / `fix:` 버그 / `refactor:` 리팩터링 / `style:` UI·스타일 / `docs:` 문서 / `chore:` 설정·패키지
   - 예) `feat: 화면 공유 시작 버튼 구현`
-- 작업 순서: `main` pull → 브랜치 생성 → 작업 → `npm run lint && npm run typecheck && npm run build` (CI와 같은 검사) → push → `main`으로 PR
+- 작업 순서: `main` pull → 브랜치 생성 → 작업 → `npm run lint && npm run typecheck && npm test && npm run build` (CI와 같은 검사) → push → `main`으로 PR
 - PR은 다른 FE 팀원이 확인 후 머지 (해커톤이므로 리뷰는 10분 이내로 가볍게, 막히면 본인 머지 후 공지)
 - 커밋은 작게, 자주 (기여도 집계에도 유리)
 - 패키지 추가 시 `package-lock.json`도 같이 커밋하고 디스코드에 공지 (BE와 같은 `package.json`을 씀)

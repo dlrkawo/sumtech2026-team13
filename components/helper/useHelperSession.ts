@@ -180,5 +180,3 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     setBubbleOpen,
   };
 }
-
-export type HelperSession = ReturnType<typeof useHelperSession>;

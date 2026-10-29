@@ -22,6 +22,8 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
         email="preview@example.com"
         settings={settings}
         error={null}
+        logoutError={null}
+        isLoggingOut={false}
         isSaving={false}
         onUpdate={(patch) => setSettings((s) => ({ ...s, ...patch }))}
         onOpenHistory={noop}
