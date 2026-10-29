@@ -125,7 +125,8 @@ export function AnswerBubble({
             좁은 화면·PiP 작은 창에서는 지금처럼 세로로 쌓는다 */}
         {showGuide && (
           <div
-            className={`flex flex-col gap-[10px] ${image ? "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] xl:grid-rows-[auto_auto_1fr] xl:gap-x-[24px] xl:[grid-template-areas:'risk_risk'_'text_img'_'act_img']" : ""}`}
+            // 세로가 짧은 화면(1280×720 등)에서는 사진이 낮게 그려져 폭이 남으므로 글 칸을 넓혀 안내 줄 수를 줄인다 (위험 경고+긴 안내에서 아래 줄이 잘렸다)
+            className={`flex flex-col gap-[10px] ${image ? "xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] xl:[@media(max-height:800px)]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-rows-[auto_auto_1fr] xl:gap-x-[24px] xl:[grid-template-areas:'risk_risk'_'text_img'_'act_img']" : ""}`}
           >
             {guide.risk && (
               <p
@@ -147,7 +148,7 @@ export function AnswerBubble({
             </div>
             {image && (
               <div className="xl:[grid-area:img]">
-                <ScreenPreview image={image} target={guide.target} />
+                <ScreenPreview image={image} target={guide.target} hasRisk={isRisk} />
               </div>
             )}
             <div className="flex flex-col gap-[10px] xl:[grid-area:act]">
