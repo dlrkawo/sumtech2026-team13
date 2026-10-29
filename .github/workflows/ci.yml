@@ -8,6 +8,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+# 같은 브랜치·PR에 새 commit이 올라오면 이전 검사는 취소한다
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # docs/problem.yaml, docs/scenarios.yaml이 키트 형식(대시보드가 읽는 키 이름)을 지키는지 검사
   docs:

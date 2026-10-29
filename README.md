@@ -24,6 +24,8 @@ curl http://localhost:3000/__health
 - `docker compose down -v`는 DB를 비우고 처음부터 띄웁니다(주최 측 실행과 같은 조건).
 - `/__health`가 `{"releaseId":"dev"}`로 200을 주면 정상입니다. 브라우저에서 http://localhost:3000 을 열면 첫 화면이 보입니다.
 - 끄기: `docker compose down`
+- BE API 확인: 앱이 뜬 뒤 `bash scripts/smoke-api.sh` (시드 계정 로그인 → 내 정보 → 설정 → 도움 기록 → 가입 → 로그아웃)
+- 앱이 처음 뜰 때 DB 테이블과 시드 계정(`student@example.com` / `loopthon-2026`)을 자동으로 만듭니다 (`instrumentation.ts` → `server/db/init.ts`)
 
 로컬 개발 서버(Node.js 24 필요):
 
