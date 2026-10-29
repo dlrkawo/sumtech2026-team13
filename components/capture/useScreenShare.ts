@@ -26,7 +26,7 @@ function createCaptureController(): FocusCaptureController | undefined {
   return Ctor ? new Ctor() : undefined;
 }
 
-// 탭·창을 공유해도 곁길 탭에 머문다 (크롬 기본은 공유한 탭으로 넘어감).
+// 탭·창을 공유해도 눌러보슈 탭에 머문다 (크롬 기본은 공유한 탭으로 넘어감).
 // 공유가 시작된 직후에만 부를 수 있고, 화면 전체 공유에는 해당하지 않는다
 function stayOnThisTab(controller: FocusCaptureController | undefined, stream: MediaStream) {
   const surface = stream.getVideoTracks()[0]?.getSettings().displaySurface;

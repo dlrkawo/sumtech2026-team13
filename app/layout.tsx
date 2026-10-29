@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-// 서비스 이름 '곁길' (Landing.tsx의 제목과 같다)
+// 서비스 이름 '눌러보슈' (Landing.tsx의 제목과 같다)
 export const metadata: Metadata = {
-  title: "곁길",
+  title: "눌러보슈",
   description: "막힌 화면에서 다음에 누를 곳을 하나씩 짚어 주는 도우미",
 };
 

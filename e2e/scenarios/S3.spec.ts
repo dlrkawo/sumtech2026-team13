@@ -34,7 +34,7 @@ test("S3 다음 화면으로 이어서 예약 완료까지 안내를 받는다",
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
-  await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
+  await page.getByRole("button", { name: "눌러보슈 도우미 열기" }).click()
 
   await choosePhoto(page, "사진 올리기", "mock-step1.png")
 

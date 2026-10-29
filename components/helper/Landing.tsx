@@ -10,7 +10,7 @@ export function Landing() {
         sm:fixed sm:inset-y-0 sm:left-0 sm:z-0 sm:w-[300px] sm:items-start sm:justify-center sm:px-[28px] sm:py-0 sm:text-left"
     >
       <PetChar mood="calm" sign="flag" size={96} />
-      <h1 className="text-[30px] font-bold text-[#16191D] sm:text-[36px]">곁길</h1>
+      <h1 className="text-[30px] font-bold text-[#16191D] sm:text-[36px]">눌러보슈</h1>
       <p className="max-w-[320px] text-[20px] leading-[1.45] text-[#454B53]">
         처음 보는 사이트에서 누를 곳을 하나씩 알려드려요
       </p>

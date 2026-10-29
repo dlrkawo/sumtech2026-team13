@@ -2,7 +2,7 @@ import Image from "next/image";
 
 import { PetSignMark } from "./PetSignMark";
 
-// 곁길 도우미 캐릭터 (v6 디자인). 바탕 그림 위에 표정·표시를 SVG로 덧그린다.
+// 눌러보슈 도우미 캐릭터 (v6 디자인). 바탕 그림 위에 표정·표시를 SVG로 덧그린다.
 // 색만으로 뜻을 전하지 않도록 상태 글자는 옆 상태 칸과 말풍선이 따로 보여 준다.
 export type PetMood = "calm" | "look" | "think" | "happy" | "sorry" | "alert";
 export type PetSign = "flag" | "o" | "x" | "q" | "none";

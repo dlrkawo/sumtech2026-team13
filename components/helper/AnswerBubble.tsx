@@ -65,7 +65,7 @@ export function AnswerBubble({
 
   return (
     <section
-      aria-label="곁길 답변"
+      aria-label="눌러보슈 답변"
       className={`flex w-full max-w-[420px] flex-col break-keep overflow-hidden rounded-[28px] border-2 bg-white shadow-[0_14px_34px_rgba(0,0,0,.22)] sm:max-w-[470px] xl:max-w-[1200px] ${isRisk ? "border-[#C8102E]" : "border-[#1D4E89]"}`}
     >
       <div className="flex items-center gap-[12px] border-b border-[#E6E3DC] py-[8px] pr-[12px] pl-[18px]">

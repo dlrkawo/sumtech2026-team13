@@ -38,7 +38,7 @@ test("S6 새로 가입해 기록 저장을 끄고 물어보면 기록이 남지 
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
-  await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
+  await page.getByRole("button", { name: "눌러보슈 도우미 열기" }).click()
 
   await choosePhoto(page, "사진 올리기", "mock-step1.png")
 

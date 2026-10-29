@@ -64,7 +64,7 @@ function copyDocumentStyle(target: Document) {
       target.head.append(link);
     }
   }
-  target.title = "곁길";
+  target.title = "눌러보슈";
   target.documentElement.lang = document.documentElement.lang;
   target.body.className = document.body.className;
 }
