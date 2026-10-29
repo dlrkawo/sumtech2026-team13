@@ -31,3 +31,6 @@ next-env.d.ts
 
 # next dev가 자동으로 만드는 에이전트 안내 파일
 AGENTS.md
+
+# e2e/에서 npm install 하면 생기는 파일 (키트 e2e 폴더에는 없음)
+e2e/package-lock.json

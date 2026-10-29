@@ -26,6 +26,8 @@ curl http://localhost:3000/__health
 - 끄기: `docker compose down`
 - BE API 확인: 앱이 뜬 뒤 `bash scripts/smoke-api.sh` (시드 계정 로그인 → 내 정보 → 설정 → 도움 기록 → 가입 → 로그아웃)
 - 앱이 처음 뜰 때 DB 테이블과 시드 계정(`student@example.com` / `loopthon-2026`)을 자동으로 만듭니다 (`instrumentation.ts` → `server/db/init.ts`)
+- **E2E를 채점기와 같은 순서로 한 번에**: `bash scripts/e2e-local.sh` (빈 DB 기동 → `/__health` 2분 확인 → `e2e/scenarios` 실행 → 정리). 일부만: `bash scripts/e2e-local.sh S2 S3`, 앱을 켜 두려면 `KEEP=1`을 앞에 붙입니다. AI가 필요한 흐름은 `.env`에 `AI_GATEWAY_API_KEY`가 있어야 합니다(한 번에 약 $0.05).
+- 화면 안내 API만 확인: `bash scripts/smoke-guide.sh e2e/fixtures/mock-step1.png "병원 예약하고 싶어"`
 
 로컬 개발 서버(Node.js 24 필요):
 
