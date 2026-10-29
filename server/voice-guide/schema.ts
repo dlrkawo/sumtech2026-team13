@@ -19,9 +19,10 @@ export const voiceGuideRequestSchema = z.object(
     // 값이 아예 없을 때도 영어 기본 문구 대신 화면에 보여 줄 문장을 쓴다
     image: z.string({ error: "화면 사진이 필요해요." }).min(1, "화면 사진이 필요해요."),
     audio: z.string({ error: "목소리 녹음이 필요해요." }).min(1, "목소리 녹음이 필요해요."),
-    // 선택. 바로 전에 받은 안내 문장 (POST /api/guides와 같음, 길면 잘라서 받음)
+    // 선택. 바로 전에 받은 안내 문장 (POST /api/guides와 같음: 300자를 넘으면 앞 300자만 사용)
     previousInstruction: previousInstructionSchema,
   },
+  // 본문이 객체가 아닐 때(null·배열 등)도 영어 기본 문구 대신 쓴다
   { error: "요청 형식이 올바르지 않아요." },
 );
 export type VoiceGuideRequest = z.infer<typeof voiceGuideRequestSchema>;

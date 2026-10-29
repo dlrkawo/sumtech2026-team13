@@ -64,7 +64,8 @@ export function IconMode(props: IconModeProps) {
     <>
       {props.showEdge && <EdgeFrame />}
       {/* 왼쪽 소개 영역(Landing)과 짝을 이루는 오른쪽 안내·조작 영역.
-          처음엔 캐릭터(+설정)만 보이고, 캐릭터를 누르면 안내·시작/멈추기·입력창이 그 아래로 펼쳐진다.
+          캐릭터(+설정)와 ▶■·상태 막대는 항상 보이고(상태는 항상 보여 준다, problem.yaml design_decision),
+          캐릭터를 누르면 안내 말풍선·입력창이 그 아래로 펼쳐진다.
           좁을 때는 Landing 아래로 이어지는 한 화면(세로형), sm부터는 Landing 폭(300px)만큼 오른쪽에 고정(가로형) */}
       <div
         className="z-30 flex w-full flex-col items-center gap-[14px] overflow-y-auto px-[16px] pt-[6px] pb-[20px]
@@ -94,9 +95,7 @@ export function IconMode(props: IconModeProps) {
               </svg>
             </button>
           </div>
-          {props.isBubbleOpen && (
-            <ControlPill status={status} isOn={props.isOn} onPlay={props.onStart} onStop={props.onStop} />
-          )}
+          <ControlPill status={status} isOn={props.isOn} onPlay={props.onStart} onStop={props.onStop} />
         </div>
         {props.isBubbleOpen && (
           <>
