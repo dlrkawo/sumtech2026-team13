@@ -1,0 +1,28 @@
+# 앱 코드 검사: 린트 · 타입 검사 · 빌드 (키트 3-1a의 5: 프로젝트에 맞는 검사)
+# 흐름 E2E는 scenarios.yml이 따로 돈다.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Build
+        run: npm run build
