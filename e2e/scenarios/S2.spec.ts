@@ -1,23 +1,25 @@
-import path from "node:path"
 import { expect, test } from "@playwright/test"
+import { E2E_USER_EMAIL, E2E_USER_PASSWORD } from "../env"
 
-test("S2: 현재 화면 사진으로 첫 안내를 받는다", async ({ page }) => {
+// ※ 라벨·버튼 이름은 기획 문서(docs/scenarios.yaml) 기준이다. 실제 화면 문구가 정해지면 같이 맞춘다.
+//   아이콘 버튼(▶ 설정)은 접근성 이름(aria-label)을 아래 이름과 같게 둔다.
+
+test("S2 로그인하고 도움을 시작한다", async ({ page }) => {
+  // 1. 사이트에 접속한다
   await page.goto("/")
 
-  // 1. 첫 화면의 '하고 싶은 작업을 입력하세요' 칸에 작업을 입력하고 '다음'을 누른다
-  await page.getByLabel("하고 싶은 작업을 입력하세요").fill("병원 예약 방법을 알고 싶어요")
-  await page.getByRole("button", { name: "다음" }).click()
+  // 2. 이메일과 비밀번호를 입력한다
+  await page.getByLabel("이메일").fill(E2E_USER_EMAIL)
+  await page.getByLabel("비밀번호").fill(E2E_USER_PASSWORD)
 
-  // 2. '화면 사진 올리기'를 눌러 예약 시작 화면 사진을 고른다
-  await page
-    .getByLabel("화면 사진 올리기")
-    .setInputFiles(path.join(__dirname, "../fixtures/mock-step1.png"))
-  // 3. '현재 화면 분석' 버튼을 누른다
-  await page.getByRole("button", { name: "현재 화면 분석" }).click()
+  // 3. '로그인' 버튼을 누른다
+  await page.getByRole("button", { name: "로그인" }).click()
 
-  // expected: '화면을 분석하고 있어요' 상태 뒤에 한 단계 안내 문장이 보이고,
-  // 올린 화면 사진 위에 눌러야 할 위치가 빨간 테두리로 표시된다
-  await expect(page.getByText("화면을 분석하고 있어요")).toBeVisible()
-  await expect(page.getByTestId("guidance-message")).toBeVisible()
-  await expect(page.getByTestId("target-screen-highlight")).toBeVisible()
+  // 4. 설정 창에서 '도움 시작하기'를 누른다
+  await page.getByRole("button", { name: "도움 시작하기" }).click()
+
+  // expected: 설정 창이 사라지고 아이콘 모드에서 '▶' 버튼과 '설정' 버튼이 보인다
+  await expect(page.getByRole("button", { name: "도움 시작하기" })).toBeHidden()
+  await expect(page.getByRole("button", { name: "▶" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "설정" })).toBeVisible()
 })
