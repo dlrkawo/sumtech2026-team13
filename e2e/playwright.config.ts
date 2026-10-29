@@ -23,13 +23,12 @@ export default defineConfig({
     timezoneId: "Asia/Seoul",
     serviceWorkers: "block",
     trace: "retain-on-failure",
+    // 화면이 아직 없을 때 버튼을 2분(test timeout)까지 기다리지 않고 빨리 실패하게 한다 (CI 대기 시간 단축).
+    // 주최 측 실행은 이 파일을 쓰지 않으므로 채점에는 영향 없음
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
   },
   // docs/scenarios.yaml의 platform에 맞는 것만 남긴다(both면 둘 다). 주최 측 실행도 같은 화면 크기로 돈다.
-  projects: [
-    { name: "desktop", use: { viewport: { width: 1440, height: 900 } } },
-    {
-      name: "mobile",
-      use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
-    },
-  ],
+  // 13팀: platform desktop → desktop만 남김 (mobile까지 돌면 시간이 두 배)
+  projects: [{ name: "desktop", use: { viewport: { width: 1440, height: 900 } } }],
 })
