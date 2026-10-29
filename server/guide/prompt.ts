@@ -1,0 +1,88 @@
+import "server-only";
+
+import type { GuideResponse, GuideRisk, GuideStatus, GuideTarget } from "./schema";
+
+// 화면 분석 프롬프트와 AI 응답 해석. trash/locate-element.js의 프롬프트를 GuideResponse 형식에 맞게 옮겼다.
+// AI에게는 원본 픽셀 좌표로 묻고(정확도가 더 높음), 응답할 때 0~1 비율로 바꾼다.
+
+type RiskType = "PAYMENT" | "TRANSFER" | "DELETE";
+
+const RISK_MESSAGES: Record<RiskType, string> = {
+  PAYMENT: "돈이 나가는 버튼이에요. 한 번 더 확인하세요",
+  TRANSFER: "돈이 나가는 버튼이에요. 한 번 더 확인하세요",
+  DELETE: "지우면 되돌릴 수 없는 버튼이에요. 한 번 더 확인하세요",
+};
+
+// AI가 위험 단계를 놓쳐도 경고가 빠지지 않도록, 안내 문장에 이 낱말이 있으면 위험으로 본다
+const RISK_KEYWORDS: [RegExp, RiskType][] = [
+  [/송금|이체/, "TRANSFER"],
+  [/결제|구매|주문하기|충전/, "PAYMENT"],
+  [/삭제|탈퇴/, "DELETE"],
+];
+
+export function buildGuidePrompt(question: string, width: number, height: number, previousInstruction?: string): string {
+  const previous = previousInstruction
+    ? `\n바로 전에 사용자에게 준 안내: ${previousInstruction}\n사용자는 그 안내를 따른 뒤 이 화면을 보고 있다. 같은 안내를 반복하지 말고 이 화면에서의 다음 단계를 골라라.`
+    : "";
+
+  return `이 이미지는 사용자가 보고 있는 화면 캡처이고 크기는 ${width}x${height} 픽셀이다.
+사용자는 디지털 기기에 익숙하지 않은 어르신이다. 사용자가 하고 싶은 일: ${question}${previous}
+
+지금 화면에서 사용자가 다음에 할 한 단계만 골라 아래 JSON만 출력해라. 다른 텍스트는 쓰지 마라.
+{"instruction": "...", "box": [x1, y1, x2, y2] 또는 null, "riskType": "PAYMENT" | "TRANSFER" | "DELETE" | null, "status": "IN_PROGRESS" | "DONE" | "NEED_INFO"}
+
+- instruction: 어르신이 바로 따라 할 수 있는 쉬운 존댓말 한 문장. 버튼 글자는 화면에 보이는 그대로 작은따옴표로 쓴다.
+- box: 눌러야 할 요소의 원본 이미지 픽셀 좌표(왼쪽 위 x1, y1, 오른쪽 아래 x2, y2). 누를 곳이 없거나 찾지 못하면 null.
+- riskType: 그 요소를 누르면 결제(PAYMENT)·송금(TRANSFER)·삭제(DELETE)가 일어나면 그 값, 아니면 null.
+- status:
+  - DONE: 화면에 신청·결제·예약 등이 끝났다는 문구가 분명히 보일 때만.
+  - NEED_INFO: 화면만으로는 다음 단계를 판단할 수 없을 때. 이때 instruction은 무엇을 확인해야 하는지 안내한다.
+  - IN_PROGRESS: 그 밖의 경우.
+- 화면에 근거가 없는 내용은 추측해서 쓰지 마라.`;
+}
+
+// AI 응답 글에서 JSON을 꺼내 GuideResponse로 바꾼다. 해석할 수 없으면 null (호출한 쪽에서 AI_FAILED)
+export function parseGuideAnswer(text: string, width: number, height: number): GuideResponse | null {
+  const match = /\{[\s\S]*\}/.exec(text);
+  if (!match) return null;
+
+  let raw: Record<string, unknown>;
+  try {
+    raw = JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
+
+  const instruction = typeof raw.instruction === "string" ? raw.instruction.trim() : "";
+  if (!instruction) return null;
+
+  const status: GuideStatus = raw.status === "DONE" || raw.status === "NEED_INFO" ? raw.status : "IN_PROGRESS";
+  // 완료 화면에는 더 누를 곳을 표시하지 않는다
+  const target = status === "DONE" ? null : toTarget(raw.box, width, height);
+
+  return { instruction, target, risk: toRisk(raw.riskType, instruction), status };
+}
+
+function toTarget(box: unknown, width: number, height: number): GuideTarget | null {
+  if (!Array.isArray(box) || box.length !== 4 || !box.every((n) => typeof n === "number" && Number.isFinite(n))) {
+    return null;
+  }
+  const [x1, y1, x2, y2] = box as number[];
+  const left = clamp(Math.min(x1, x2) / width);
+  const top = clamp(Math.min(y1, y2) / height);
+  const right = clamp(Math.max(x1, x2) / width);
+  const bottom = clamp(Math.max(y1, y2) / height);
+  if (right - left <= 0 || bottom - top <= 0) return null;
+  return { x: round(left), y: round(top), width: round(right - left), height: round(bottom - top) };
+}
+
+function toRisk(riskType: unknown, instruction: string): GuideRisk | null {
+  const type =
+    riskType === "PAYMENT" || riskType === "TRANSFER" || riskType === "DELETE"
+      ? riskType
+      : RISK_KEYWORDS.find(([pattern]) => pattern.test(instruction))?.[1];
+  return type ? { message: RISK_MESSAGES[type] } : null;
+}
+
+const clamp = (n: number) => Math.min(1, Math.max(0, n));
+const round = (n: number) => Math.round(n * 10000) / 10000;
