@@ -26,7 +26,8 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   // 안내를 받을 때 보낸 화면. 말풍선에서 이 사진 위에 누를 곳을 표시한다
   const [shownImage, setShownImage] = useState<string | null>(null);
   const [notice, setNotice] = useState<HelperNotice | null>(null);
-  const [isBubbleOpen, setBubbleOpen] = useState(true);
+  // 처음엔 캐릭터만 보이고, 캐릭터를 눌러야 안내·조작부가 펼쳐진다
+  const [isBubbleOpen, setBubbleOpen] = useState(false);
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
   // 같은 질문을 이어서 물을 때마다 +1, 새 질문을 물으면 1로 되돌아간다 (v2 S2·S3)
   const [step, setStep] = useState(1);
@@ -108,23 +109,6 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     if (lastQuestion) void ask(lastQuestion, { next: true });
   }, [ask, lastQuestion]);
 
-  // '다음 화면 보기': 화면 공유 없이 사진으로 묻던 중, 다음 화면 사진을 올려 바로 전 안내와 함께 이어서 분석을 요청한다 (v2 S3)
-  const nextScreen = useCallback(
-    async (file: File) => {
-      if (!lastQuestion || guide.isLoading) return;
-      setBubbleOpen(true);
-      try {
-        const image = await fileToDataUrl(file);
-        setPhoto(image);
-        setNotice(null);
-        await runGuide(image, lastQuestion, true);
-      } catch (e) {
-        setNotice({ kind: "error", error: toUserError(e) });
-      }
-    },
-    [lastQuestion, guide.isLoading, runGuide],
-  );
-
   // 로그인이 풀렸으면(401 AUTH_REQUIRED) 로그인 창으로 돌린다
   const needsLogin = guide.state.status === "error" && guide.state.error.needsLogin;
   useEffect(() => {
@@ -151,7 +135,6 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
     stop,
     ask,
     next,
-    nextScreen,
     pickPhoto,
     retry: guide.retry,
     setBubbleOpen,

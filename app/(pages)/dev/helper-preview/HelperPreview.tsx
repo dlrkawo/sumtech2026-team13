@@ -17,7 +17,6 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
       <Landing />
       <IconMode
         isOn
-        isSharing={false}
         hasScreen
         hasPhoto
         isAnswering={mock === "loading"}
@@ -34,7 +33,6 @@ export function HelperPreview({ mock, image }: { mock: string; image: string }) 
         onStop={noop}
         onAsk={noop}
         onNext={noop}
-        onPickNextScreen={noop}
         onRetry={noop}
         onQuestionChange={setQuestion}
         onPickPhoto={noop}

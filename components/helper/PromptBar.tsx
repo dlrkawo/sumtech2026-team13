@@ -29,7 +29,7 @@ export function PromptBar({ question, isAnswering, voice, onQuestionChange, onAs
     <div className="flex flex-col gap-[6px]">
       <form
         onSubmit={onSubmit}
-        className="flex w-[560px] max-w-[calc(100vw-32px)] items-center gap-[8px] rounded-[40px] border-2 border-[#8A8F96] bg-white py-[6px] pr-[6px] pl-[22px] shadow-[0_10px_24px_rgba(0,0,0,.18)] focus-within:border-[#1D4E89]"
+        className="flex w-full items-center gap-[8px] rounded-[40px] border-2 border-[#8A8F96] bg-white py-[6px] pr-[6px] pl-[22px] shadow-[0_10px_24px_rgba(0,0,0,.18)] focus-within:border-[#1D4E89]"
       >
         <label htmlFor="helper-question" className="sr-only">
           질문 입력

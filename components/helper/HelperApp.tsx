@@ -66,7 +66,6 @@ export function HelperApp() {
       <div hidden={view !== "icon"}>
         <IconMode
           isOn={session.isOn}
-          isSharing={session.isSharing}
           hasScreen={session.hasScreen}
           hasPhoto={session.hasPhoto}
           isAnswering={session.isAnswering}
@@ -83,7 +82,6 @@ export function HelperApp() {
           onStop={session.stop}
           onAsk={(q) => void session.ask(q)}
           onNext={session.next}
-          onPickNextScreen={(file) => void session.nextScreen(file)}
           onRetry={() => void session.retry()}
           onQuestionChange={setQuestion}
           onPickPhoto={(file) => void session.pickPhoto(file)}

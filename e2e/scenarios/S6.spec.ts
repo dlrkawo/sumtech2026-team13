@@ -19,6 +19,8 @@ test("S6 새로 가입해 기록 저장을 끄고 물어보면 기록이 남지 
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
+  await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
+
   await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-step1.png"))
 
   await page.getByLabel("질문 입력").fill("병원 예약하고 싶어")

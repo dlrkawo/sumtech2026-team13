@@ -1,7 +1,6 @@
 import type { GuideResponse, GuideStatus } from "@/server/guide/schema";
 
 import { BubbleNotice } from "./BubbleNotice";
-import { NextScreenUpload } from "./NextScreenUpload";
 import { ScreenPreview } from "./ScreenPreview";
 import { BUTTON_SECONDARY, FOCUS_RING } from "./styles";
 import type { HelperNotice } from "./useHelperSession";
@@ -9,10 +8,10 @@ import type { HelperNotice } from "./useHelperSession";
 // 캐릭터 위 말풍선. 안내 문장·누를 곳 사진·위험 경고를 본 화면에 띄운다 (E2E는 본 화면에서 확인)
 // 보여 줄 내용은 모두 props로 받는다. 안내 값 모양은 서버의 GuideResponse 그대로다.
 //   data-testid: guide-text(안내 문장), click-highlight(누를 곳, ScreenPreview)
-// DONE·NEED_INFO 문구는 v2 시나리오가 그대로 찾는 글자다 (IN_PROGRESS는 "N단계"로 따로 보여 준다)
+// v3 시나리오(S1~S6)가 그대로 찾는 글자다. 단계 번호(step)는 이 문구 옆에 작게 따로 보여 준다.
 const STATUS_LABEL: Record<GuideStatus, string> = {
   IN_PROGRESS: "누를 곳을 찾았어요",
-  DONE: "다 끝났어요",
+  DONE: "다 됐어요",
   NEED_INFO: "화면만으로는 알기 어려워요",
 };
 
@@ -25,15 +24,11 @@ export interface AnswerBubbleProps {
   image: string | null;
   // 같은 질문을 이어서 물을 때마다 +1 (v2 S2·S3)
   step: number;
-  // 화면 공유 중이면 '눌렀어요, 다음 알려 주세요'로 지금 화면을 다시 찍고,
-  // 아니면 '다음 화면 보기'로 새 사진을 올려 이어서 묻는다
-  isSharing: boolean;
   error: { message: string; canRetry: boolean } | null;
   notice: HelperNotice | null;
   // 아직 아무것도 묻지 않았을 때 보여 줄 말
   idleText: string;
   onNext: () => void;
-  onPickNextScreen: (file: File) => void;
   onRetry: () => void;
   onClose: () => void;
 }
@@ -44,12 +39,10 @@ export function AnswerBubble({
   guide,
   image,
   step,
-  isSharing,
   error,
   notice,
   idleText,
   onNext,
-  onPickNextScreen,
   onRetry,
   onClose,
 }: AnswerBubbleProps) {
@@ -59,7 +52,7 @@ export function AnswerBubble({
   return (
     <section
       aria-label="곁길 답변"
-      className={`flex w-[470px] max-w-[calc(100vw-32px)] flex-col break-keep overflow-hidden rounded-[28px] border-2 bg-white shadow-[0_14px_34px_rgba(0,0,0,.22)] ${isRisk ? "border-[#C8102E]" : "border-[#1D4E89]"}`}
+      className={`flex w-full max-w-[420px] flex-col break-keep overflow-hidden rounded-[28px] border-2 bg-white shadow-[0_14px_34px_rgba(0,0,0,.22)] sm:max-w-[470px] ${isRisk ? "border-[#C8102E]" : "border-[#1D4E89]"}`}
     >
       <div className="flex items-center gap-[12px] border-b border-[#E6E3DC] py-[8px] pr-[12px] pl-[18px]">
         <p className="flex-1 text-[20px] font-bold text-[#1D4E89]" aria-live="polite">
@@ -73,7 +66,7 @@ export function AnswerBubble({
           접기
         </button>
       </div>
-      <div className="flex max-h-[calc(100vh-340px)] flex-col gap-[10px] [&>*]:shrink-0 overflow-y-auto px-[18px] pt-[12px] pb-[16px] text-[20px]">
+      <div className="flex max-h-[44dvh] flex-col gap-[10px] [&>*]:shrink-0 overflow-y-auto px-[18px] pt-[12px] pb-[16px] text-[20px] sm:max-h-[56dvh]">
         {isLoading && (
           <div className="flex items-center gap-[12px]">
             <span
@@ -95,21 +88,19 @@ export function AnswerBubble({
                 <span>{guide.risk.message}</span>
               </p>
             )}
-            <p className="text-[20px] font-bold text-[#1D4E89]">
-              {guide.status === "IN_PROGRESS" ? `${step}단계` : STATUS_LABEL[guide.status]}
+            <p className="flex items-baseline gap-[8px] text-[20px] font-bold text-[#1D4E89]">
+              <span>{STATUS_LABEL[guide.status]}</span>
+              {guide.status === "IN_PROGRESS" && <span className="text-[14px] font-normal text-[#454B53]">{step}단계</span>}
             </p>
             <p data-testid="guide-text" className="text-[24px] leading-[1.45] font-bold">
               {guide.instruction}
             </p>
             {image && <ScreenPreview image={image} target={guide.target} />}
-            {guide.status === "IN_PROGRESS" &&
-              (isSharing ? (
-                <button type="button" className={BUTTON_SECONDARY} onClick={onNext}>
-                  눌렀어요, 다음 알려 주세요
-                </button>
-              ) : (
-                <NextScreenUpload onPick={onPickNextScreen} />
-              ))}
+            {guide.status === "IN_PROGRESS" && (
+              <button type="button" className={BUTTON_SECONDARY} onClick={onNext}>
+                눌렀어요, 다음 알려 주세요
+              </button>
+            )}
             <p className="text-[20px] text-[#454B53]">누르는 건 직접 해 주세요.</p>
           </>
         )}

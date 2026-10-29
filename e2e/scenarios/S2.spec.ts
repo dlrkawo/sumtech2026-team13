@@ -18,6 +18,8 @@ test("S2 병원 예약 화면 사진을 올려 묻고 누를 곳 안내를 받�
 
   await page.getByRole("button", { name: "도움 시작하기" }).click()
 
+  await page.getByRole("button", { name: "곁길 도우미 열기" }).click()
+
   await page.getByLabel("화면 사진 올리기").setInputFiles(fixture("mock-step1.png"))
 
   await page.getByLabel("질문 입력").fill("병원 예약하고 싶어")
