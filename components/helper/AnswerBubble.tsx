@@ -130,7 +130,7 @@ export function AnswerBubble({
             <div className="flex flex-col gap-[10px] xl:[grid-area:text]">
               <p className="flex items-baseline gap-[8px] text-[20px] font-bold text-[#1D4E89]">
                 {showStatusLabel && <span>{STATUS_LABEL[guide.status]}</span>}
-                {guide.status === "IN_PROGRESS" && <span className="text-[14px] font-normal text-[#454B53]">{step}단계</span>}
+                {guide.status === "IN_PROGRESS" && <span className="text-[20px] font-normal text-[#454B53]">{step}단계</span>}
               </p>
               <p data-testid="guide-text" className="text-[24px] leading-[1.45] font-bold xl:text-[28px]">
                 {guide.instruction}
