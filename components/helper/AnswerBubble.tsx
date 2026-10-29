@@ -48,6 +48,8 @@ export function AnswerBubble({
 }: AnswerBubbleProps) {
   const isRisk = !isLoading && guide?.risk != null;
   const showGuide = !isLoading && !error && guide !== null;
+  // 누를 곳을 찾지 못하면(target 없음) '누를 곳을 찾았어요' 없이 안내 문장만 보인다 (problem.yaml design_decision 한계)
+  const showStatusLabel = guide !== null && !(guide.status === "IN_PROGRESS" && guide.target === null);
 
   return (
     <section
@@ -89,7 +91,7 @@ export function AnswerBubble({
               </p>
             )}
             <p className="flex items-baseline gap-[8px] text-[20px] font-bold text-[#1D4E89]">
-              <span>{STATUS_LABEL[guide.status]}</span>
+              {showStatusLabel && <span>{STATUS_LABEL[guide.status]}</span>}
               {guide.status === "IN_PROGRESS" && <span className="text-[14px] font-normal text-[#454B53]">{step}단계</span>}
             </p>
             <p data-testid="guide-text" className="text-[24px] leading-[1.45] font-bold">

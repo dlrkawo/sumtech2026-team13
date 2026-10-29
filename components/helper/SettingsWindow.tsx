@@ -12,6 +12,7 @@ export function SettingsWindow({
   email,
   settings,
   error,
+  isSaving,
   onUpdate,
   onOpenHistory,
   onStart,
@@ -20,6 +21,8 @@ export function SettingsWindow({
   email: string;
   settings: SettingsResponse | null;
   error: UserError | null;
+  // 설정을 서버에 저장하는 중. 끝나기 전에는 '도움 시작하기'를 누를 수 없다
+  isSaving: boolean;
   onUpdate: (patch: SettingsUpdateRequest) => void;
   onOpenHistory: () => void;
   onStart: () => void;
@@ -81,7 +84,12 @@ export function SettingsWindow({
           {error.message}
         </p>
       )}
-      <button type="button" className={BUTTON_PRIMARY} onClick={onStart}>
+      {isSaving && (
+        <p role="status" className={MUTED}>
+          설정을 저장하고 있어요…
+        </p>
+      )}
+      <button type="button" className={BUTTON_PRIMARY} disabled={isSaving} onClick={onStart}>
         도움 시작하기
       </button>
       <p className="text-[20px] text-[#454B53]">

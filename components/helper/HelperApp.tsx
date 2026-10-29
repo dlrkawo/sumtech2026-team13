@@ -25,7 +25,7 @@ type View = "settings" | "history" | "icon";
 export function HelperApp() {
   const auth = useAuth();
   const signedIn = auth.state.status === "signedIn";
-  const { settings, error: settingsError, update } = useSettings(signedIn);
+  const { settings, error: settingsError, isSaving: isSavingSettings, update } = useSettings(signedIn);
   const [view, setView] = useState<View>("settings");
   const history = useHistory(signedIn && view === "history");
   const [question, setQuestion] = useState("");
@@ -99,6 +99,7 @@ export function HelperApp() {
           email={auth.state.user.email}
           settings={settings}
           error={settingsError}
+          isSaving={isSavingSettings}
           onUpdate={(patch) => void update(patch)}
           onOpenHistory={() => setView("history")}
           onStart={startHelp}
@@ -115,6 +116,7 @@ export function HelperApp() {
           items={history.items}
           error={history.error}
           isLoading={history.isLoading}
+          isSaving={isSavingSettings}
           onClear={history.clear}
           onBack={() => setView("settings")}
           onStart={startHelp}
