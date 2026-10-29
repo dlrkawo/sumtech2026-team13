@@ -122,6 +122,10 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   return {
     isOn,
     isSharing: share.isSharing,
+    // 브라우저의 화면 고르기 창이 떠 있음
+    isPicking: share.status === "starting",
+    // ▶는 도움이 켜져 있어도, 공유 중이거나 고르는 중이 아니면 다시 누를 수 있다 (취소·공유 중지·사진 먼저 올림)
+    canPlay: share.status !== "sharing" && share.status !== "starting",
     hasScreen: share.isSharing || photo !== null,
     hasPhoto: photo !== null,
     isAnswering: guide.isLoading,

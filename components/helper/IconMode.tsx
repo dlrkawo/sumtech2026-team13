@@ -15,6 +15,10 @@ import type { HelperNotice } from "./useHelperSession";
 // '설정' 버튼은 항상 보인다 (scenarios.yaml 화면 흐름)
 export interface IconModeProps {
   isOn: boolean;
+  // ▶를 누를 수 있음 (공유 중·고르는 중이 아님)
+  canPlay: boolean;
+  // 브라우저의 화면 고르기 창이 떠 있음
+  isPicking: boolean;
   // 공유 중인 화면이나 올린 사진이 있음
   hasScreen: boolean;
   hasPhoto: boolean;
@@ -95,7 +99,13 @@ export function IconMode(props: IconModeProps) {
               </svg>
             </button>
           </div>
-          <ControlPill status={status} isOn={props.isOn} onPlay={props.onStart} onStop={props.onStop} />
+<ControlPill
+            status={status}
+            isOn={props.isOn}
+            canPlay={props.canPlay}
+            onPlay={props.onStart}
+            onStop={props.onStop}
+          />
         </div>
         {props.isBubbleOpen && (
           <>
@@ -131,7 +141,9 @@ function bubbleTitle(status: HelperStatus): string {
 function idleText(p: IconModeProps): string {
   if (!p.isOn) return "▶를 누르거나, ‘사진 올리기’로 지금 화면 사진을 올려 주세요.";
   if (p.hasScreen) return "하고 싶은 일을 아래 칸에 적고 ‘물어보기’를 눌러 주세요.";
-  return "브라우저 창에서 보여 줄 화면을 골라 주세요.";
+  if (p.isPicking) return "브라우저 창에서 보여 줄 화면을 골라 주세요.";
+  // 고르기를 취소했거나 브라우저의 '공유 중지'로 끝난 경우
+  return "▶를 눌러 화면을 다시 고르거나, ‘사진 올리기’로 지금 화면 사진을 올려 주세요.";
 }
 
 // 캐릭터 표정: 보고 있음(돋보기) · 생각 중 · 다 됐어요(O) · 위험(!) · 알기 어려움(?) · 안 됨(X)

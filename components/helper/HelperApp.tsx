@@ -71,6 +71,8 @@ export function HelperApp() {
       <div hidden={view !== "icon"}>
         <IconMode
           isOn={session.isOn}
+          canPlay={session.canPlay}
+          isPicking={session.isPicking}
           hasScreen={session.hasScreen}
           hasPhoto={session.hasPhoto}
           isAnswering={session.isAnswering}
