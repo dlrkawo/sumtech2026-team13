@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>PiP 실험</title>
+  </head>
+  <body>
+    <button id="open">작은 창으로 띄우기</button>
+    <pre id="result">대기 중</pre>
+    <script>
+      const result = document.getElementById('result');
+      const show = (obj) => (result.textContent = JSON.stringify(obj));
+      // 앱(components/pip/usePipWindow)과 같은 방식: 클릭에서 requestWindow, 작은 창 안에 버튼을 그린다
+      document.getElementById('open').addEventListener('click', async () => {
+        if (!('documentPictureInPicture' in window)) return show({ status: 'NO_API' });
+        result.textContent = '요청 중';
+        try {
+          const win = await documentPictureInPicture.requestWindow({ width: 520, height: 600 });
+          const btn = win.document.createElement('button');
+          btn.textContent = '작은 창 안의 설정';
+          btn.onclick = () => (result.textContent = JSON.stringify({ status: 'CLICKED_IN_PIP' }));
+          win.document.body.append(btn);
+          show({ status: 'OPENED', w: win.innerWidth, h: win.innerHeight });
+        } catch (e) {
+          show({ status: 'FAILED', name: e.name, message: e.message });
+        }
+      });
+    </script>
+  </body>
+</html>
