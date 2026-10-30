@@ -169,8 +169,7 @@ export function AnswerBubble({
           </div>
         )}
 
-        {/* 입력 사진 처리 오류가 있어도 출처가 바뀌지 않았다면 이전 요청 재시도는 유지한다. */}
-        {!isLoading && error && (
+        {!isLoading && error && !notice && (
           <>
             <p role="alert" className="text-[22px] font-bold text-[#9B1C1C]">
               {error.message}

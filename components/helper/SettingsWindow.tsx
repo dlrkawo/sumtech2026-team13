@@ -107,18 +107,7 @@ export function SettingsWindow({
         도움 시작하기
       </button>
       <p className="text-[20px] text-[#454B53]">
-        화면은 앱 DB에 저장하지 않지만, 화면·질문·이전 안내를 외부 AI로 보내요.
-        제공자의 보관·학습 정책은 아직 확인이 필요해요.
-      </p>
-      <p className="text-[20px] text-[#454B53]">
-        {settings?.saveHistory === false
-          ? isSaving
-            ? "설정 저장이 끝난 뒤의 새 질문과 안내부터 앱 DB에 남기지 않아요."
-            : "기록 저장이 꺼져 있어 새 질문과 안내는 앱 DB에 남기지 않아요. 기존 기록은 따로 지워 주세요."
-          : settings?.saveHistory === true
-            ? "기록 저장이 켜져 있어 질문과 안내 문장이 도움 기록에 남아요."
-            : "기록 저장이 켜져 있을 때만 질문과 안내 문장이 도움 기록에 남아요."}
-        {" "}기록 저장을 꺼도 안내를 위한 외부 AI 전송은 계속돼요.
+        보여 주신 화면은 저장하지 않아요. 물어본 말과 안내 문장만 도움 기록에 남아요.
       </p>
     </WindowFrame>
   );

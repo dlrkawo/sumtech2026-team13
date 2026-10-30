@@ -9,7 +9,7 @@ import { ApiError } from "@/lib/api/types";
 
 const mocks = vi.hoisted(() => ({
   getMe: vi.fn(), login: vi.fn(), signup: vi.fn(), logout: vi.fn(),
-  stop: vi.fn(), cancelVoice: vi.fn(), close: vi.fn(), ask: vi.fn(), update: vi.fn(),
+  stop: vi.fn(), close: vi.fn(), ask: vi.fn(), update: vi.fn(),
   settingsError: null as { code: string; message: string; canRetry: boolean; needsLogin: boolean } | null,
 }));
 vi.mock("@/components/auth/api", () => mocks);
@@ -19,7 +19,7 @@ vi.mock("@/components/settings", () => ({ useSettings: () => ({
 }) }));
 vi.mock("@/components/history", () => ({ useHistory: () => ({ items: [], error: null }) }));
 vi.mock("@/components/pip", () => ({ usePipWindow: () => ({ close: mocks.close, pipWindow: null, isSupported: false }) }));
-vi.mock("@/components/voice", () => ({ useSpeechInput: () => ({ cancel: mocks.cancelVoice }) }));
+vi.mock("@/components/voice", () => ({ useSpeechInput: () => ({}) }));
 vi.mock("@/components/helper/useHelperSession", () => ({ useHelperSession: () => ({ stop: mocks.stop, ask: mocks.ask }) }));
 vi.mock("@/components/helper/IconMode", () => ({ IconMode: () => null }));
 vi.mock("@/components/helper/AuthWindow", () => ({ AuthWindow: () => createElement("div", { "data-testid": "auth" }) }));
