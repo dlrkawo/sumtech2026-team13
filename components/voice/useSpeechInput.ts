@@ -53,7 +53,6 @@ export function useSpeechInput(onText: (text: string) => void) {
     rec.maxAlternatives = 1;
     let heard = false;
     rec.onresult = (e) => {
-      if (recRef.current !== rec) return;
       const text = Array.from(e.results)
         .map((r) => r[0]?.transcript ?? "")
         .join(" ")
@@ -62,11 +61,8 @@ export function useSpeechInput(onText: (text: string) => void) {
       heard = true;
       onTextRef.current(text);
     };
-    rec.onerror = () => {
-      if (recRef.current === rec) setStatus("failed");
-    };
+    rec.onerror = () => setStatus("failed");
     rec.onend = () => {
-      if (recRef.current !== rec) return;
       recRef.current = null;
       setStatus((prev) => (prev === "listening" ? (heard ? "idle" : "failed") : prev));
     };
@@ -80,23 +76,13 @@ export function useSpeechInput(onText: (text: string) => void) {
     }
   }, []);
 
-  // abort()가 동기 이벤트를 발생시키거나 이미 큐에 든 콜백이 늦게 실행돼도 무시한다.
-  const release = useCallback(() => {
-    const rec = recRef.current;
+  const cancel = useCallback(() => {
+    recRef.current?.abort();
     recRef.current = null;
-    if (!rec) return;
-    rec.onresult = null;
-    rec.onerror = null;
-    rec.onend = null;
-    rec.abort();
+    setStatus("idle");
   }, []);
 
-  const cancel = useCallback(() => {
-    release();
-    setStatus("idle");
-  }, [release]);
-
-  useEffect(() => release, [release]);
+  useEffect(() => () => recRef.current?.abort(), []);
 
   return { status, isListening: status === "listening", listen, cancel };
 }

@@ -8,7 +8,7 @@ import { getSettings, updateSettings } from "./api";
 // 설정 창에서 쓴다. enabled가 true(로그인 상태)일 때만 불러온다 (로그인 전에는 401이므로)
 //   const { settings, update } = useSettings(auth.state.status === "signedIn");
 //   update({ edgeDisplay: false });
-export function useSettings(enabled: boolean, userId?: number) {
+export function useSettings(enabled: boolean) {
   const [settings, setSettings] = useState<SettingsResponse | null>(null);
   const [error, setError] = useState<UserError | null>(null);
   // 화면에 바로 보이는 값. 저장이 실패하면 이전 값으로 되돌린다
@@ -18,54 +18,47 @@ export function useSettings(enabled: boolean, userId?: number) {
   const pending = useRef(0);
   const [isSaving, setIsSaving] = useState(false);
 
-  // 로그인 수명마다 독립적인 저장 큐를 쓴다. 이미 전송된 PATCH는 취소하지 못해도
-  // 이전 응답/오류와 아직 전송하지 않은 큐는 다음 계정에 영향을 주면 안 된다.
-  const generation = useRef(0);
-  const active = useRef(false);
   useEffect(() => {
-    const id = ++generation.current;
-    active.current = enabled;
     if (!enabled) return;
+    let ignore = false;
     getSettings()
       .then((data) => {
-        if (id !== generation.current) return;
+        if (ignore) return;
         confirmed.current = data;
         setSettings(data);
         setError(null);
       })
       .catch((e: unknown) => {
-        if (id === generation.current) setError(toUserError(e));
+        if (!ignore) setError(toUserError(e));
       });
     return () => {
-      generation.current += 1;
-      active.current = false;
+      ignore = true;
+    };
+  }, [enabled]);
+
+  // 로그아웃·세션 만료로 enabled가 꺼지면 이전 사람의 설정이 남지 않게 비운다
+  useEffect(() => {
+    if (!enabled) return;
+    return () => {
       confirmed.current = null;
-      queue.current = Promise.resolve();
-      pending.current = 0;
       setSettings(null);
       setError(null);
-      setIsSaving(false);
     };
-  }, [enabled, userId]);
+  }, [enabled]);
 
   // 스위치를 누르면 바로 바뀐 것처럼 보이고, 저장에 실패하면 되돌리고 error를 채운다
   // (스위치는 먼저 바꿔 둔다. E2E의 switch.uncheck()는 누른 직후 상태가 바뀌어야 통과한다)
   const update = useCallback((patch: SettingsUpdateRequest) => {
-    if (!active.current || !confirmed.current) return Promise.resolve();
-    const id = generation.current;
+    if (!confirmed.current) return Promise.resolve();
     setSettings((prev) => (prev ? { ...prev, ...patch } : prev));
     setError(null);
     pending.current += 1;
     setIsSaving(true);
 
     const save = async () => {
-      if (id !== generation.current || !active.current) return;
       try {
-        const data = await updateSettings(patch);
-        if (id !== generation.current) return;
-        confirmed.current = data;
+        confirmed.current = await updateSettings(patch);
       } catch (e) {
-        if (id !== generation.current) return;
         setError(toUserError(e));
       }
       pending.current -= 1;

@@ -38,9 +38,6 @@ export async function createGuide(
         `reasoning=${result.reasoningTokens} finish=${result.finishReason} cost≈$${cost.toFixed(4)}`,
     );
 
-    // 잘린 응답은 JSON 일부가 우연히 완전해 보여도 성공으로 쓰거나 다시 요청하지 않는다.
-    if (result.finishReason === "length") throw aiFailed();
-
     answer = parseGuideAnswer(result.text, screen.width, screen.height, question);
     if (answer) break;
 
@@ -48,6 +45,7 @@ export async function createGuide(
     console.error(
       `[guide] unparsable AI answer attempt=${attempt} (length=${result.text.length}, finish=${result.finishReason})`,
     );
+    if (result.finishReason === "length") break;
   }
   if (!answer) throw aiFailed();
 

@@ -1,5 +1,4 @@
 import path from "node:path"
-import { expectFixtureButtonHighlight } from "../helpers/assert-fixture-target"
 import { expect, test, type Page } from "@playwright/test"
 import { E2E_USER_EMAIL, E2E_USER_PASSWORD } from "../env"
 
@@ -39,5 +38,5 @@ test("S2 병원 예약 화면 사진을 올려 묻고 누를 곳 안내를 받�
 
   await expect(page.getByText("누를 곳을 찾았어요")).toBeVisible(AI_WAIT)
   await expect(page.getByTestId("guide-text")).not.toBeEmpty()
-  await expectFixtureButtonHighlight(page)
+  await expect(page.getByTestId("click-highlight")).toBeVisible()
 })

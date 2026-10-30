@@ -24,11 +24,6 @@ export type HelperNotice =
 export type ScreenSource = "share" | "photo";
 
 export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
-  // 중지·로그아웃 뒤 늦게 끝난 사진 변환/캡처가 도움 상태를 되살리지 않게 한다.
-  const generation = useRef(0);
-  const photoRequest = useRef(0);
-  const sourceChoice = useRef(0);
-  useEffect(() => () => { generation.current += 1; }, []);
   const share = useScreenShare();
   const guide = useGuideRequest();
   const [isOn, setIsOn] = useState(false);
@@ -59,7 +54,6 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
   // ▶: 도움을 켜고 화면 공유를 요청한다. 공유가 안 돼도 켜진 상태로 두고 사진 올리기로 이어 간다
   // 이미 공유 중이면(사진으로 묻다가 다시 누름) 공유 화면으로 돌아오기만 한다
   const play = useCallback(async () => {
-    sourceChoice.current += 1;
     setIsOn(true);
     setBubbleOpen(true);
     setNotice(null);
@@ -69,8 +63,6 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
 
   // ■: 화면 보기를 멈추고 이번에 본 화면은 지운다
   const stop = useCallback(() => {
-    generation.current += 1;
-    photoRequest.current += 1;
     share.stop();
     guide.reset();
     setIsOn(false);
@@ -84,22 +76,15 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
 
   const pickPhoto = useCallback(
     async (file: File) => {
-      const currentGeneration = generation.current;
-      const currentPhoto = ++photoRequest.current;
-      const currentChoice = ++sourceChoice.current;
       setBubbleOpen(true);
       try {
-        const image = await fileToDataUrl(file);
-        if (currentGeneration !== generation.current || currentPhoto !== photoRequest.current) return;
-        setPhoto(image);
-        // 사진 변환을 기다리는 사이 ▶를 눌렀다면 최근 선택인 공유를 유지한다.
-        if (currentChoice === sourceChoice.current) setPrefersShare(false);
+        setPhoto(await fileToDataUrl(file));
+        setPrefersShare(false);
         setIsOn(true);
         setNotice(null);
         // 새 사진을 골랐으니 바꾸기 전 사진으로 실패한 요청의 '다시 시도'는 지운다
         clearError();
       } catch (e) {
-        if (currentGeneration !== generation.current || currentPhoto !== photoRequest.current) return;
         setNotice({ kind: "error", error: toUserError(e) });
       }
     },
@@ -129,7 +114,6 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
 
   const ask = useCallback(
     async (raw: string, options?: { next?: boolean }) => {
-      const currentGeneration = generation.current;
       const question = raw.trim();
       if (!question || guide.isLoading) return;
       setBubbleOpen(true);
@@ -140,7 +124,6 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
         try {
           image = await share.captureFrame();
         } catch (e) {
-          if (currentGeneration !== generation.current) return;
           return setNotice({ kind: "error", error: toUserError(e) });
         }
       } else if (source === "photo" && photo) {
@@ -151,7 +134,6 @@ export function useHelperSession({ onNeedLogin }: { onNeedLogin: () => void }) {
         return setNotice({ kind: "needScreen", reason: share.error?.message });
       }
 
-      if (currentGeneration !== generation.current) return;
       await runGuide(image, question, Boolean(options?.next));
     },
     [guide.isLoading, isOn, source, share, photo, shownImage, runGuide],
