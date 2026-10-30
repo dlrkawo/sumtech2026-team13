@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { matchesFixtureButton } from "./fixture-target";
+import { matchesFixtureButton } from "../../tests/helpers/fixture-target";
 
 export async function expectFixtureButtonHighlight(page: Page) {
   const highlight = page.getByTestId("click-highlight");
