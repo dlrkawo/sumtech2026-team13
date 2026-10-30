@@ -5,7 +5,7 @@ import { AnswerBubble } from "@/components/helper/AnswerBubble";
 import { SettingsWindow } from "@/components/helper/SettingsWindow";
 import { useHelperSession } from "@/components/helper/useHelperSession";
 import { ApiError } from "@/lib/api/types";
-import { FIXTURE_BUTTON, matchesFixtureButton } from "@/e2e/helpers/fixture-target";
+import { FIXTURE_BUTTON, matchesFixtureButton } from "@/tests/helpers/fixture-target";
 const mocks = vi.hoisted(() => ({ file: vi.fn(), api: vi.fn() }));
 vi.mock("@/lib/image", async original => ({ ...await original<typeof import("@/lib/image")>(), fileToDataUrl: mocks.file }));
 vi.mock("@/components/guide/api", () => ({ createGuide: mocks.api }));
