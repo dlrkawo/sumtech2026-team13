@@ -25,7 +25,7 @@ type View = "settings" | "history" | "icon";
 export function HelperApp() {
   const auth = useAuth();
   const signedIn = auth.state.status === "signedIn";
-  const { settings, error: settingsError, isSaving: isSavingSettings, update } = useSettings(signedIn);
+  const { settings, error: settingsError, isSaving: isSavingSettings, update } = useSettings(signedIn && !auth.isLoggingOut, auth.user?.id);
   const [view, setView] = useState<View>("settings");
   const history = useHistory(signedIn && view === "history");
   const [question, setQuestion] = useState("");
@@ -60,12 +60,17 @@ export function HelperApp() {
   //   (다음 사람에게 이전 사람의 사진·안내·질문이 남지 않도록)
   const { close: closePip } = pip;
   const { stop: stopSession } = session;
+  const { cancel: cancelVoice } = voice;
+  const stopHelp = useCallback(() => {
+    cancelVoice();
+    stopSession();
+  }, [cancelVoice, stopSession]);
   const resetHelp = useCallback(() => {
     closePip();
-    stopSession();
+    stopHelp();
     setQuestion("");
     setView("settings");
-  }, [closePip, stopSession]);
+  }, [closePip, stopHelp]);
 
   useEffect(() => {
     resetHelpRef.current = resetHelp;
@@ -114,7 +119,7 @@ export function HelperApp() {
           question={question}
           voice={voiceEnabled ? { status: voice.status, onToggle: voice.isListening ? voice.cancel : voice.listen } : null}
           onStart={() => void session.play()}
-          onStop={session.stop}
+          onStop={stopHelp}
           onAsk={(q) => void session.ask(q)}
           onNext={session.next}
           onRetry={() => void session.retry()}

@@ -1,4 +1,5 @@
 import path from "node:path"
+import { expectFixtureButtonHighlight } from "../helpers/assert-fixture-target"
 import { expect, test, type Page } from "@playwright/test"
 import { E2E_USER_EMAIL, E2E_USER_PASSWORD } from "../env"
 
@@ -42,6 +43,7 @@ test("S3 다음 화면으로 이어서 예약 완료까지 안내를 받는다",
 
   await page.getByRole("button", { name: "물어보기" }).click()
   await expect(page.getByText("누를 곳을 찾았어요")).toBeVisible(AI_WAIT)
+  await expectFixtureButtonHighlight(page)
   // 입력 출처: 사진으로 묻고 있음을 말풍선 맨 위에 보여 준다 (#78)
   await expect(page.getByText("올린 사진으로 물어봐요")).toBeVisible()
 
@@ -61,7 +63,7 @@ test("S3 다음 화면으로 이어서 예약 완료까지 안내를 받는다",
   await expect(page.getByText("누를 곳을 찾았어요")).toBeVisible()
   // 새 사진으로 이어 물었으므로 단계가 하나 올라간다
   await expect(page.getByText("2단계", { exact: true })).toBeVisible()
-  await expect(page.getByTestId("click-highlight")).toBeVisible()
+  await expectFixtureButtonHighlight(page)
 
   await choosePhoto(page, "사진 바꾸기", "mock-done.png")
 
